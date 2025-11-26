@@ -182,7 +182,7 @@ foreach ($dir in $criticalDirs) {
     $dirPath = Join-Path $InstallDir $dir
     if (Test-Path $dirPath) {
         $fileCount = (Get-ChildItem -Path $dirPath -Recurse -File).Count
-        Write-LogSuccess "Found: $dir/ ($fileCount files)"
+        Write-LogSuccess "Found: $dir/ - $fileCount files"
     } else {
         Write-LogError "MISSING: $dir/"
         $missingFiles += "$dir/"
@@ -232,7 +232,7 @@ if (-not $envContent -or $envContent.Trim().Length -eq 0) {
 }
 
 $lineCount = (Get-Content $envFile | Measure-Object -Line).Lines
-Write-LogSuccess ".env file verified ($lineCount lines)"
+Write-LogSuccess ".env file verified - $lineCount lines"
 
 ###############################################################################
 # STEP 2: Verify Docker
@@ -321,9 +321,9 @@ $baseBuildDuration = [math]::Round(((Get-Date) - $baseBuildStart).TotalMinutes, 
 
 Write-Host ""
 if ($baseExitCode -eq 0) {
-    Write-LogSuccess "base-poetry-deps built successfully! (${baseBuildDuration} minutes)"
+    Write-LogSuccess "base-poetry-deps built successfully! Duration: ${baseBuildDuration} minutes"
 } else {
-    Write-LogError "base-poetry-deps build FAILED (exit code: $baseExitCode)"
+    Write-LogError "base-poetry-deps build FAILED - exit code: $baseExitCode"
     Write-Host ""
     if ($LogFile) { Write-Log "Check the log file for details: $LogFile" }
     Wait-ForUserInput "Press Enter to exit..."
@@ -345,9 +345,9 @@ $appBuildDuration = [math]::Round(((Get-Date) - $appBuildStart).TotalMinutes, 1)
 
 Write-Host ""
 if ($appExitCode -eq 0) {
-    Write-LogSuccess "Application services built successfully! (${appBuildDuration} minutes)"
+    Write-LogSuccess "Application services built successfully! Duration: ${appBuildDuration} minutes"
 } else {
-    Write-LogError "Application build FAILED (exit code: $appExitCode)"
+    Write-LogError "Application build FAILED - exit code: $appExitCode"
     Write-Host ""
     if ($LogFile) { Write-Log "Check the log file for details: $LogFile" }
     Wait-ForUserInput "Press Enter to exit..."
@@ -378,7 +378,7 @@ docker compose up -d 2>&1 | ForEach-Object {
 $upExitCode = $LASTEXITCODE
 
 if ($upExitCode -ne 0) {
-    Write-LogError "Failed to start containers (exit code: $upExitCode)"
+    Write-LogError "Failed to start containers - exit code: $upExitCode"
     Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
@@ -402,7 +402,7 @@ $runningCount = (docker compose ps --status running --format "{{.Name}}" 2>&1 | 
 Write-LogStep "STEP 6/6: Verifying Services"
 
 if ($runningCount -gt 0) {
-    Write-LogSuccess "$runningCount container(s) running"
+    Write-LogSuccess "$runningCount containers running"
 } else {
     Write-LogWarning "No containers appear to be running"
     Write-Log "You may need to start services manually using the Start Menu shortcut"
