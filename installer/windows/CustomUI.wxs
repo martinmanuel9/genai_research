@@ -21,16 +21,13 @@
 
         <!-- File path selection -->
         <Control Id="EnvFileLabel" Type="Text" X="20" Y="60" Width="330" Height="10" NoPrefix="yes">
-          <Text>.env file path (REQUIRED - type or paste full path):</Text>
+          <Text>.env file path (REQUIRED):</Text>
         </Control>
 
-        <Control Id="EnvFileEdit" Type="Edit" X="20" Y="75" Width="330" Height="18" Property="ENV_FILE_PATH" TabSkip="no">
-          <!-- Publish events to enable Next button when text changes -->
-          <Publish Property="_EnvFileChanged" Value="1">1</Publish>
-        </Control>
+        <Control Id="EnvFileEdit" Type="Edit" X="20" Y="75" Width="330" Height="18" Property="ENV_FILE_PATH" Indirect="no" />
 
         <Control Id="HintText" Type="Text" X="20" Y="95" Width="330" Height="20" NoPrefix="yes">
-          <Text>Example: C:\Users\YourName\Documents\.env (Press Tab after pasting to enable Next)</Text>
+          <Text>Enter or paste the full path to your .env file, then click Next.</Text>
         </Control>
 
         <!-- Info text -->
@@ -45,9 +42,9 @@
         <!-- Navigation buttons -->
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="!(loc.WixUIBack)" />
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="!(loc.WixUINext)">
-          <!-- Disable Next button if ENV_FILE_PATH is empty -->
-          <Condition Action="disable"><![CDATA[ENV_FILE_PATH = ""]]></Condition>
-          <Condition Action="enable"><![CDATA[ENV_FILE_PATH <> ""]]></Condition>
+          <!-- Show error if ENV_FILE_PATH is empty when clicking Next -->
+          <Publish Event="SpawnDialog" Value="EnvFileRequiredDlg"><![CDATA[ENV_FILE_PATH = ""]]></Publish>
+          <Publish Event="NewDialog" Value="InstallDirDlg"><![CDATA[ENV_FILE_PATH <> ""]]></Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -56,10 +53,20 @@
         <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
       </Dialog>
 
+      <!-- Error dialog for missing .env file -->
+      <Dialog Id="EnvFileRequiredDlg" Width="260" Height="85" Title="[ProductName]">
+        <Control Id="ErrorIcon" Type="Icon" X="15" Y="15" Width="24" Height="24" ToolTip="Error" IconSize="32" FixedSize="yes" Text="WixUI_Ico_Exclam" />
+        <Control Id="ErrorText" Type="Text" X="48" Y="15" Width="200" Height="40" NoPrefix="yes">
+          <Text>The .env file path is required. Please enter or paste the full path to your .env configuration file.</Text>
+        </Control>
+        <Control Id="OKButton" Type="PushButton" X="102" Y="57" Width="56" Height="17" Default="yes" Cancel="yes" Text="OK">
+          <Publish Event="EndDialog" Value="Return">1</Publish>
+        </Control>
+      </Dialog>
+
       <!-- Customize the dialog sequence to insert our custom dialog -->
       <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="EnvFileBrowseDlg" Order="3">LicenseAccepted = "1"</Publish>
       <Publish Dialog="EnvFileBrowseDlg" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
-      <Publish Dialog="EnvFileBrowseDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg">1</Publish>
 
       <!-- Update InstallDirDlg back button to go to our custom dialog -->
       <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="EnvFileBrowseDlg">1</Publish>

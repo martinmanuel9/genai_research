@@ -1,7 +1,7 @@
 ###############################################################################
-# Windows Post-Installation Script
-# Runs DURING MSI installation with visible terminal output
-# Streamlined workflow: .env creation → compute detection → model download → docker build
+# GenAI Research - First-Time Setup Wizard
+# Interactive post-installation configuration
+# Run from Start Menu "First-Time Setup" shortcut
 ###############################################################################
 
 param(
@@ -10,78 +10,61 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-function Write-Info {
-    param([string]$Message)
-    Write-Host "[INFO] $Message" -ForegroundColor Cyan
-}
+# Load shared utilities (interactive mode)
+. "$PSScriptRoot\docker-utils.ps1"
 
-function Write-Success {
-    param([string]$Message)
-    Write-Host "[SUCCESS] $Message" -ForegroundColor Green
-}
-
-function Write-Warning {
-    param([string]$Message)
-    Write-Host "[WARNING] $Message" -ForegroundColor Yellow
-}
-
-function Write-ErrorMsg {
-    param([string]$Message)
-    Write-Host "[ERROR] $Message" -ForegroundColor Red
-}
-
-function Write-Step {
-    param([string]$Message)
+function Wait-ForKey {
+    param([string]$Message = "Press any key to continue...")
     Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host "  $Message" -ForegroundColor Cyan
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Host $Message
+    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
-# Set console buffer to handle lots of output
+# Set console buffer for lots of output
 try {
     $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(120, 9999)
-} catch {
-    # Ignore if we can't set buffer size
-}
+} catch { }
+
+###############################################################################
+# MAIN SCRIPT
+###############################################################################
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host "  GenAI Research - First-Time Setup" -ForegroundColor Green
+Write-Host "  GenAI Research - First-Time Setup Wizard" -ForegroundColor Green
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
 Write-Host ""
-Write-Info "Installation Directory: $InstallDir"
+Write-Log "Installation Directory: $InstallDir"
 Write-Host ""
 
-# Change to install directory
 Set-Location $InstallDir
 
 ###############################################################################
-# STEP 1: Create .env file
+# STEP 1: Environment Configuration
 ###############################################################################
-Write-Step "STEP 1/5: Environment Configuration"
+Write-LogStep "STEP 1/4: Environment Configuration"
 
 $envFile = Join-Path $InstallDir ".env"
 $envTemplate = Join-Path $InstallDir ".env.template"
 
 if (Test-Path $envFile) {
-    Write-Warning ".env file already exists"
+    Write-LogWarning ".env file already exists"
     $overwrite = Read-Host "Do you want to reconfigure? (y/N)"
-    if ($overwrite -ne "y" -and $overwrite -ne "Y") {
-        Write-Info "Keeping existing .env file"
+    if ($overwrite -eq "y" -or $overwrite -eq "Y") {
+        Remove-Item $envFile -Force
     } else {
-        Remove-Item $envFile
+        Write-Log "Keeping existing .env file"
     }
 }
 
 if (-not (Test-Path $envFile)) {
-    Write-Host "Please paste your .env file contents below."
-    Write-Host "When finished, type 'END' on a new line and press Enter."
     Write-Host ""
-    Write-Host "TIP: Your .env file should contain:" -ForegroundColor Yellow
-    Write-Host "  - OPENAI_API_KEY=your-key-here" -ForegroundColor Yellow
-    Write-Host "  - DATABASE_URL, DB_PASSWORD, and other settings" -ForegroundColor Yellow
+    Write-Host "Please paste your .env file contents below." -ForegroundColor Yellow
+    Write-Host "When finished, type 'END' on a new line and press Enter." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Your .env file should contain:" -ForegroundColor DarkGray
+    Write-Host "  - OPENAI_API_KEY=your-key-here" -ForegroundColor DarkGray
+    Write-Host "  - DATABASE_URL, DB_PASSWORD, and other settings" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "Start pasting now:" -ForegroundColor Cyan
     Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
@@ -101,379 +84,205 @@ if (-not (Test-Path $envFile)) {
     $content = $lines -join "`n"
 
     if ($content.Trim()) {
-        Write-Host ""
-        Write-Info "Saving .env file to: $envFile"
         Set-Content -Path $envFile -Value $content -Encoding UTF8
-
         if (Test-Path $envFile) {
             $fileSize = (Get-Item $envFile).Length
-            Write-Success ".env file created successfully! (Size: $fileSize bytes)"
-
-            # Show first few lines for verification
-            Write-Host ""
-            Write-Host "First few lines of your .env file:" -ForegroundColor Yellow
-            Get-Content $envFile -TotalCount 3 | ForEach-Object {
-                $maskedLine = $_ -replace '(KEY|PASSWORD|SECRET)=.*', '$1=***HIDDEN***'
-                Write-Host "  $maskedLine" -ForegroundColor DarkGray
-            }
-            Write-Host "  ..." -ForegroundColor DarkGray
+            Write-LogSuccess ".env file created ($fileSize bytes)"
         } else {
-            Write-ErrorMsg "Failed to create .env file!"
-            Write-Host "Press any key to exit..."
-            $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+            Write-LogError "Failed to create .env file!"
+            Wait-ForKey
             exit 1
         }
     } else {
-        Write-ErrorMsg "No content provided!"
-
+        Write-LogError "No content provided!"
         if (Test-Path $envTemplate) {
-            Write-Info "Creating .env from template instead..."
+            Write-Log "Creating .env from template..."
             Copy-Item $envTemplate $envFile
-            Write-Warning "You'll need to edit the .env file manually with your API keys"
-            Write-Info "Location: $envFile"
+            Write-LogWarning "You'll need to edit the .env file manually with your API keys"
         } else {
-            Write-ErrorMsg "No template file found. Cannot continue."
-            Write-Host "Press any key to exit..."
-            $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+            Write-LogError "No template file found. Cannot continue."
+            Wait-ForKey
             exit 1
         }
     }
 }
 
-Write-Host ""
-Write-Success "✓ Step 1/5 Complete: Environment configuration"
+Write-LogSuccess "Step 1/4 Complete"
 
 ###############################################################################
-# STEP 2: Check Docker
+# STEP 2: Docker Verification
 ###############################################################################
-Write-Step "STEP 2/5: Docker Verification"
+Write-LogStep "STEP 2/4: Docker Verification"
 
-$dockerRunning = $false
-try {
-    $null = docker info 2>&1
-    if ($LASTEXITCODE -eq 0) {
-        $dockerRunning = $true
-        Write-Success "Docker Desktop is running"
-    }
-} catch {
-    $dockerRunning = $false
-}
-
-if (-not $dockerRunning) {
-    Write-Warning "Docker Desktop is not running"
-    Write-Info "Please start Docker Desktop before continuing"
+if (Test-DockerRunning) {
+    Write-LogSuccess "Docker Desktop is running"
+} else {
+    Write-LogWarning "Docker Desktop is not running"
     $startDocker = Read-Host "Would you like to start Docker Desktop now? (Y/n)"
-    if ($startDocker -ne "n" -and $startDocker -ne "N") {
-        Write-Info "Starting Docker Desktop..."
-        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-        Write-Info "Waiting for Docker to start (this may take 30-60 seconds)..."
 
-        # Wait for Docker to be ready
+    if ($startDocker -ne "n" -and $startDocker -ne "N") {
+        Write-Log "Starting Docker Desktop..."
+        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+        Write-Log "Waiting for Docker to start (up to 2 minutes)..."
+
         $maxWait = 120
         $waited = 0
         while ($waited -lt $maxWait) {
             Start-Sleep -Seconds 5
             $waited += 5
-            try {
-                $null = docker info 2>&1
-                if ($LASTEXITCODE -eq 0) {
-                    $dockerRunning = $true
-                    Write-Success "Docker is now running!"
-                    break
-                }
-            } catch {
-                Write-Host "." -NoNewline
+            Write-Host "." -NoNewline
+            if (Test-DockerRunning) {
+                Write-Host ""
+                Write-LogSuccess "Docker is now running!"
+                break
             }
         }
 
-        if (-not $dockerRunning) {
-            Write-ErrorMsg "Docker failed to start in time"
-            Write-Info "Please start Docker manually and run 'First-Time Setup' from Start Menu"
-            Write-Host "Press any key to exit..."
-            $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        if (-not (Test-DockerRunning)) {
+            Write-Host ""
+            Write-LogError "Docker failed to start in time"
+            Wait-ForKey
             exit 1
         }
     } else {
-        Write-ErrorMsg "Docker is required to continue"
-        Write-Info "Please start Docker Desktop and run 'First-Time Setup' from Start Menu"
-        Write-Host "Press any key to exit..."
-        $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+        Write-LogError "Docker is required to continue"
+        Wait-ForKey
         exit 1
     }
 }
 
-Write-Host ""
-Write-Success "✓ Step 2/5 Complete: Docker verification"
+Write-LogSuccess "Step 2/4 Complete"
 
 ###############################################################################
-# STEP 3: Detect compute capabilities
+# STEP 3: Ollama Model Download (Optional)
 ###############################################################################
-Write-Step "STEP 3/5: System Detection"
+Write-LogStep "STEP 3/4: Model Download (Optional)"
 
-Write-Info "Detecting system hardware..."
-$hasNvidiaGPU = $false
-$hasAMDGPU = $false
-$totalRAM = 0
-$recommendedModel = ""
-
-try {
-    # Detect GPU
-    $gpus = Get-WmiObject Win32_VideoController
-    foreach ($gpu in $gpus) {
-        if ($gpu.Name -like "*NVIDIA*") {
-            $hasNvidiaGPU = $true
-            Write-Info "  ✓ NVIDIA GPU detected: $($gpu.Name)"
-        } elseif ($gpu.Name -like "*AMD*" -or $gpu.Name -like "*Radeon*") {
-            $hasAMDGPU = $true
-            Write-Info "  ✓ AMD GPU detected: $($gpu.Name)"
-        }
-    }
-
-    if (-not $hasNvidiaGPU -and -not $hasAMDGPU) {
-        Write-Info "  • No dedicated GPU detected (CPU mode)"
-    }
-
-    # Detect RAM
-    $ram = Get-WmiObject Win32_ComputerSystem
-    $totalRAM = [math]::Round($ram.TotalPhysicalMemory / 1GB)
-    Write-Info "  • System RAM: ${totalRAM}GB"
-} catch {
-    Write-Warning "Could not detect system specifications"
-    $totalRAM = 8  # Assume minimum
-}
-
-# Determine recommended model
-if ($hasNvidiaGPU -or $hasAMDGPU) {
-    if ($totalRAM -ge 16) {
-        $recommendedModel = "llama3.1:8b"
-    } else {
-        $recommendedModel = "llama3.2:3b"
-    }
-} else {
-    $recommendedModel = "llama3.2:1b"
-}
-
-Write-Success "System detection complete. Recommended model: $recommendedModel"
-Write-Host ""
-Write-Success "✓ Step 3/5 Complete: System detection"
-
-###############################################################################
-# STEP 4: Download Ollama models
-###############################################################################
-Write-Step "STEP 4/5: Model Download"
-
-# Check if Ollama is installed
 $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
 
 if (-not $ollamaInstalled) {
-    Write-Warning "Ollama is not installed"
-    Write-Info "Ollama provides local LLM support (recommended for privacy and cost savings)"
-    $installOllama = Read-Host "Would you like to install Ollama now? (Y/n)"
+    Write-LogWarning "Ollama is not installed"
+    Write-Log "Ollama provides local LLM support for privacy and cost savings"
+    $installOllama = Read-Host "Would you like to open the Ollama download page? (Y/n)"
 
     if ($installOllama -ne "n" -and $installOllama -ne "N") {
-        Write-Info "Opening Ollama download page in your browser..."
         Start-Process "https://ollama.com/download/windows"
-        Write-Host ""
-        Write-Warning "After installing Ollama, please run 'First-Time Setup' from Start Menu again"
-        Write-Host "Press any key to exit..."
-        $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-        exit 0
-    } else {
-        Write-Info "Skipping Ollama installation (you can install it later)"
-        Write-Host ""
-        Write-Success "✓ Step 4/5 Complete: Model download (Ollama skipped)"
+        Write-Log "After installing Ollama, run this setup again to download models"
     }
+    Write-LogSuccess "Step 3/4 Complete (Ollama skipped)"
 } else {
-    Write-Success "Ollama is installed"
-    Write-Host ""
-    Write-Info "Recommended model for your system: $recommendedModel"
+    Write-LogSuccess "Ollama is installed"
+
+    $recommendedModel = Get-RecommendedModel
+
     Write-Host ""
     Write-Host "Available models:" -ForegroundColor Yellow
-    Write-Host "  1) llama3.2:1b  - Lightweight (1.3 GB) - Fast, CPU-friendly" -ForegroundColor White
-    Write-Host "  2) llama3.2:3b  - Medium (2.0 GB) - Good balance" -ForegroundColor White
-    Write-Host "  3) llama3.1:8b  - Large (4.7 GB) - Best quality (GPU recommended)" -ForegroundColor White
-    Write-Host "  4) Skip model download (configure later)" -ForegroundColor White
+    Write-Host "  1) llama3.2:1b  - Lightweight (1.3 GB) - CPU-friendly"
+    Write-Host "  2) llama3.2:3b  - Medium (2.0 GB) - Good balance"
+    Write-Host "  3) llama3.1:8b  - Large (4.7 GB) - Best quality (GPU recommended)"
+    Write-Host "  4) Skip model download"
     Write-Host ""
 
-    $modelChoice = Read-Host "Select model [1-4] (press Enter for recommended: $recommendedModel)"
+    $modelChoice = Read-Host "Select model [1-4] (Enter for recommended: $recommendedModel)"
 
-    $selectedModel = ""
-    switch ($modelChoice.Trim()) {
-        "1" { $selectedModel = "llama3.2:1b" }
-        "2" { $selectedModel = "llama3.2:3b" }
-        "3" { $selectedModel = "llama3.1:8b" }
-        "4" {
-            Write-Info "Skipping model download"
-            $selectedModel = ""
-        }
-        "" { $selectedModel = $recommendedModel }
-        default { $selectedModel = $recommendedModel }
+    $selectedModel = switch ($modelChoice.Trim()) {
+        "1" { "llama3.2:1b" }
+        "2" { "llama3.2:3b" }
+        "3" { "llama3.1:8b" }
+        "4" { "" }
+        "" { $recommendedModel }
+        default { $recommendedModel }
     }
 
     if ($selectedModel) {
         Write-Host ""
-        Write-Info "Downloading models (this may take several minutes)..."
-        Write-Host ""
-        Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-
-        # Always pull embedding model (small, required)
-        Write-Info "Step 4a: Pulling embedding model (required): snowflake-arctic-embed2"
+        Write-Log "Downloading embedding model: snowflake-arctic-embed2"
         ollama pull snowflake-arctic-embed2
 
-        if ($LASTEXITCODE -ne 0) {
-            Write-ErrorMsg "Failed to download embedding model"
-        } else {
-            Write-Success "Embedding model downloaded successfully"
-        }
-
         Write-Host ""
-
-        # Pull selected LLM
-        Write-Info "Step 4b: Pulling LLM model: $selectedModel"
+        Write-Log "Downloading LLM model: $selectedModel"
         ollama pull $selectedModel
 
-        Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host ""
-
-        if ($LASTEXITCODE -ne 0) {
-            Write-ErrorMsg "Failed to download model: $selectedModel"
-            Write-Warning "You can download models manually later with: ollama pull <model-name>"
-        } else {
-            Write-Success "Model downloaded successfully: $selectedModel"
-        }
+        Write-LogSuccess "Models downloaded"
     }
 
-    Write-Host ""
-    Write-Success "✓ Step 4/5 Complete: Model download"
+    Write-LogSuccess "Step 3/4 Complete"
 }
 
 ###############################################################################
-# STEP 5: Build Docker images
+# STEP 4: Build Docker Images
 ###############################################################################
-Write-Step "STEP 5/5: Building Docker Images"
+Write-LogStep "STEP 4/4: Building Docker Images"
 
-Write-Info "This process will build the application Docker images."
-Write-Info "This is a ONE-TIME process that takes 5-15 minutes."
-Write-Info "You'll see all the build output below."
-Write-Host ""
+$doBuild = $true
 
-$proceedBuild = Read-Host "Proceed with Docker build? (Y/n)"
-if ($proceedBuild -eq "n" -or $proceedBuild -eq "N") {
-    Write-Warning "Build skipped. You can build later by running 'First-Time Setup' from Start Menu"
-    Write-Host ""
-    Write-Host "Press any key to exit..."
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    exit 0
+if (Test-DockerImagesExist) {
+    Write-LogSuccess "Docker images already exist"
+    $rebuild = Read-Host "Do you want to rebuild them? (y/N)"
+    $doBuild = ($rebuild -eq "y" -or $rebuild -eq "Y")
 }
 
-Write-Host ""
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-Write-Host "  Step 5a: Building base-poetry-deps" -ForegroundColor Yellow
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-Write-Host ""
-
-docker compose build base-poetry-deps
-
-if ($LASTEXITCODE -ne 0) {
+if ($doBuild) {
+    Write-Log "This is a ONE-TIME process that takes 10-20 minutes."
     Write-Host ""
-    Write-ErrorMsg "Failed to build base-poetry-deps image"
-    Write-Info "You can try again later by running 'First-Time Setup' from Start Menu"
-    Write-Host ""
-    Write-Host "Press any key to exit..."
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    exit 1
+
+    $proceedBuild = Read-Host "Proceed with Docker build? (Y/n)"
+    if ($proceedBuild -eq "n" -or $proceedBuild -eq "N") {
+        Write-LogWarning "Build skipped. Run this setup again when ready."
+        Wait-ForKey
+        exit 0
+    }
+
+    $buildSuccess = Invoke-FullBuildWorkflow -InstallDir $InstallDir -StartContainers:$false
+
+    if (-not $buildSuccess) {
+        Write-LogError "Build failed"
+        Wait-ForKey
+        exit 1
+    }
 }
 
-Write-Host ""
-Write-Success "✓ Step 5a Complete: Base dependencies built"
-Write-Host ""
-
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-Write-Host "  Step 5b: Building application services" -ForegroundColor Yellow
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Yellow
-Write-Host ""
-
-docker compose build
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host ""
-    Write-ErrorMsg "Failed to build application services"
-    Write-Info "You can try again later by running 'First-Time Setup' from Start Menu"
-    Write-Host ""
-    Write-Host "Press any key to exit..."
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-    exit 1
-}
-
-Write-Host ""
-Write-Success "✓ Step 5b Complete: Application services built"
-Write-Host ""
+Write-LogSuccess "Step 4/4 Complete"
 
 ###############################################################################
-# STEP 6: Start services
+# Start Services
 ###############################################################################
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host "  Step 5c: Starting Application" -ForegroundColor Cyan
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
-Write-Host ""
+Write-LogStep "Starting Application"
 
 $startNow = Read-Host "Start the application now? (Y/n)"
+
 if ($startNow -ne "n" -and $startNow -ne "N") {
-    Write-Host ""
-    Write-Info "Starting services..."
-    Write-Host ""
-    Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-
-    docker compose up -d
-
-    Write-Host "───────────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host ""
-        Write-ErrorMsg "Failed to start services"
-        Write-Info "Check logs with: docker compose logs"
-        Write-Host ""
-        Write-Host "Press any key to exit..."
-        $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    if (-not (Start-DockerContainers -WorkingDirectory $InstallDir -WaitSeconds 15)) {
+        Write-LogError "Failed to start services"
+        Write-Log "Check logs with: docker compose logs"
+        Wait-ForKey
         exit 1
     }
 
     Write-Host ""
-    Write-Info "Waiting for services to initialize (15 seconds)..."
-    Start-Sleep -Seconds 15
-
+    Write-LogSuccess "═══════════════════════════════════════════════════════════════"
+    Write-LogSuccess "  Setup Complete! Application is running."
+    Write-LogSuccess "═══════════════════════════════════════════════════════════════"
     Write-Host ""
-    Write-Success "✓ Application started successfully!"
+    Write-Host "Services:" -ForegroundColor Yellow
+    Write-Host "  - Streamlit UI:  http://localhost:8501"
+    Write-Host "  - FastAPI:       http://localhost:9020"
+    Write-Host "  - ChromaDB:      http://localhost:8000"
     Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host "  Setup Complete!" -ForegroundColor Green
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-    Write-Host ""
-    Write-Info "Services running:"
-    Write-Host "  • Streamlit UI:  http://localhost:8501" -ForegroundColor Cyan
-    Write-Host "  • FastAPI:       http://localhost:9020" -ForegroundColor Cyan
-    Write-Host "  • ChromaDB:      http://localhost:8000" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Info "Opening web interface in your browser..."
+    Write-Log "Opening web interface..."
     Start-Process "http://localhost:8501"
-    Write-Host ""
-    Write-Info "To stop services: Use 'Stop Services' shortcut or run: docker compose down"
 } else {
     Write-Host ""
-    Write-Success "✓ Build complete! Services not started."
+    Write-LogSuccess "═══════════════════════════════════════════════════════════════"
+    Write-LogSuccess "  Setup Complete! Ready to launch."
+    Write-LogSuccess "═══════════════════════════════════════════════════════════════"
     Write-Host ""
-    Write-Info "To start the application later:"
-    Write-Host "  • Use the 'GenAI Research' shortcut from Start Menu"
-    Write-Host "  • Or run: cd '$InstallDir' && docker compose up -d"
+    Write-Log "To start the application:"
+    Write-Host "  - Use 'GenAI Research' shortcut from Start Menu"
+    Write-Host "  - Or run: docker compose up -d"
 }
 
 Write-Host ""
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host "  Installation Complete!" -ForegroundColor Green
-Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host ""
-Write-Info "Documentation: $InstallDir\README.md"
-Write-Info "Need help? Check: $InstallDir\INSTALL.md"
-Write-Host ""
-Write-Host "Press any key to close this window..."
-$null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+Write-Log "Documentation: $InstallDir\README.md"
+
+Wait-ForKey "Press any key to close this window..."
