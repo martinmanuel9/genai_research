@@ -10,8 +10,18 @@ param(
 
 $ErrorActionPreference = "Continue"
 
+# Setup logging
+$LogDir = Join-Path $InstallDir "logs"
+if (-not (Test-Path $LogDir)) {
+    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+}
+$LogFile = Join-Path $LogDir "setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
 # Load shared utilities (interactive mode)
 . "$PSScriptRoot\docker-utils.ps1"
+
+# Set log file in docker-utils
+$script:LogFile = $LogFile
 
 function Wait-ForKey {
     param([string]$Message = "Press any key to continue...")

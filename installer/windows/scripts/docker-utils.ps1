@@ -8,57 +8,86 @@
 ###############################################################################
 
 param(
-    [switch]$ForMSI = $false
+    [switch]$ForMSI = $false,
+    [string]$LogFilePath = ""
 )
 
 # Store MSI mode in script scope for use by functions
 $script:IsMSIMode = $ForMSI
+$script:LogFile = $LogFilePath
 
 ###############################################################################
 # Logging Functions - Output differs based on MSI vs Interactive mode
 ###############################################################################
 function Write-Log {
     param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
     if ($script:IsMSIMode) {
         Write-Host "CustomAction: $Message"
         [System.Console]::Out.Flush()
     } else {
         Write-Host "[INFO] $Message" -ForegroundColor Cyan
     }
+
+    # Write to log file if specified
+    if ($script:LogFile) {
+        Add-Content -Path $script:LogFile -Value "[$timestamp] [INFO] $Message" -ErrorAction SilentlyContinue
+    }
 }
 
 function Write-LogSuccess {
     param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
     if ($script:IsMSIMode) {
         Write-Host "CustomAction: SUCCESS: $Message"
         [System.Console]::Out.Flush()
     } else {
         Write-Host "[SUCCESS] $Message" -ForegroundColor Green
     }
+
+    if ($script:LogFile) {
+        Add-Content -Path $script:LogFile -Value "[$timestamp] [SUCCESS] $Message" -ErrorAction SilentlyContinue
+    }
 }
 
 function Write-LogError {
     param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
     if ($script:IsMSIMode) {
         Write-Host "CustomAction: ERROR: $Message"
         [System.Console]::Out.Flush()
     } else {
         Write-Host "[ERROR] $Message" -ForegroundColor Red
     }
+
+    if ($script:LogFile) {
+        Add-Content -Path $script:LogFile -Value "[$timestamp] [ERROR] $Message" -ErrorAction SilentlyContinue
+    }
 }
 
 function Write-LogWarning {
     param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
     if ($script:IsMSIMode) {
         Write-Host "CustomAction: WARNING: $Message"
         [System.Console]::Out.Flush()
     } else {
         Write-Host "[WARNING] $Message" -ForegroundColor Yellow
     }
+
+    if ($script:LogFile) {
+        Add-Content -Path $script:LogFile -Value "[$timestamp] [WARNING] $Message" -ErrorAction SilentlyContinue
+    }
 }
 
 function Write-LogStep {
     param([string]$Message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
     if ($script:IsMSIMode) {
         Write-Host ""
         Write-Host "CustomAction: =============================================="
@@ -72,6 +101,13 @@ function Write-LogStep {
         Write-Host "  $Message" -ForegroundColor Cyan
         Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
         Write-Host ""
+    }
+
+    if ($script:LogFile) {
+        Add-Content -Path $script:LogFile -Value "" -ErrorAction SilentlyContinue
+        Add-Content -Path $script:LogFile -Value "[$timestamp] =============================================" -ErrorAction SilentlyContinue
+        Add-Content -Path $script:LogFile -Value "[$timestamp] $Message" -ErrorAction SilentlyContinue
+        Add-Content -Path $script:LogFile -Value "[$timestamp] =============================================" -ErrorAction SilentlyContinue
     }
 }
 

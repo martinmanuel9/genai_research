@@ -54,15 +54,16 @@
                   Return="check"
                   Impersonate="no" />
 
-    <!-- Custom action to run setup script during installation with progress -->
+    <!-- Custom action to run setup script in a VISIBLE PowerShell window -->
+    <!-- Uses cmd /c start to ensure the window is visible to the user -->
     <CustomAction Id="SetRunSetupScriptCommand"
                   Property="RunSetupScript"
-                  Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-during-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot; -EnvFilePath &quot;[ENV_FILE_PATH]&quot;"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c start &quot;GenAI Research Setup&quot; /wait &quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-during-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;"
                   Execute="immediate" />
 
     <CustomAction Id="RunSetupScript"
                   BinaryKey="WixCA"
-                  DllEntry="CAQuietExec"
+                  DllEntry="WixQuietExec"
                   Execute="deferred"
                   Return="ignore"
                   Impersonate="yes" />
@@ -77,7 +78,7 @@
       <!-- Set command for running setup script -->
       <Custom Action="SetRunSetupScriptCommand" After="CopyEnvFile">NOT Installed AND ENV_FILE_PATH</Custom>
 
-      <!-- Run setup script after files are installed (only if .env was copied successfully) -->
+      <!-- Run setup script in visible window -->
       <Custom Action="RunSetupScript" After="SetRunSetupScriptCommand">NOT Installed AND ENV_FILE_PATH</Custom>
     </InstallExecuteSequence>
 
