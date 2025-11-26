@@ -109,7 +109,7 @@ This document summarizes the updates made to the Windows MSI installer to add MI
 ### Method 4: Direct File Edit
 - Edit .env file directly in installation directory
 - Best for: Advanced users, minor tweaks
-- Location: `C:\Program Files\DIS Verification GenAI\.env`
+- Location: `C:\Program Files\GenAI Research\.env`
 
 ## Technical Details
 

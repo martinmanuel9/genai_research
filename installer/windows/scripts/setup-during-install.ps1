@@ -5,7 +5,7 @@
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI",
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research",
     [string]$EnvFilePath = ""
 )
 

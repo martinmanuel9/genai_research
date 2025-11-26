@@ -43,7 +43,7 @@ Without these values, the Docker containers cannot start, the database cannot co
 **The installer will NOT proceed past this screen without a .env file.**
 
 ### 4. Installation Directory
-- Choose install location (default: `C:\Program Files\DIS Verification GenAI`)
+- Choose install location (default: `C:\Program Files\GenAI Research`)
 - Click "Next" to start installation
 
 ### 5. Installation Progress
@@ -216,7 +216,7 @@ Before running the installer, users need:
 
 ### Step 3: Launch Application
 ```
-Start Menu → DIS Verification GenAI → DIS Verification GenAI
+Start Menu → GenAI Research → GenAI Research
 ```
 
 ## Troubleshooting

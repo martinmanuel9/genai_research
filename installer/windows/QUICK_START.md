@@ -27,7 +27,7 @@ You'll see an "Environment Configuration" dialog with two options:
 3. The interactive wizard will run after installation
 
 ### Step 4: Choose Installation Directory
-Default: `C:\Program Files\DIS Verification GenAI`
+Default: `C:\Program Files\GenAI Research`
 
 ### Step 5: Complete Installation
 Click Install and wait for completion
@@ -43,13 +43,13 @@ If you selected "Run first-time setup wizard":
 ## Quick Actions
 
 ### From Start Menu:
-- **DIS Verification GenAI** - Start the application
+- **GenAI Research** - Start the application
 - **Configure Environment** - Reconfigure .env settings
 - **First-Time Setup** - Run complete setup wizard
 - **Stop Services** - Stop all Docker containers
 
 ### From Desktop:
-- **DIS Verification GenAI** - Start the application (if you enabled desktop shortcut)
+- **GenAI Research** - Start the application (if you enabled desktop shortcut)
 
 ## Configuration Options
 
@@ -86,13 +86,13 @@ The interactive wizard will ask for:
 ## Starting the Application
 
 ### Method 1: Start Menu Shortcut
-Click "DIS Verification GenAI" from Start Menu
+Click "GenAI Research" from Start Menu
 - Starts Docker containers
 - Opens web browser to http://localhost:8501
 
 ### Method 2: Command Line
 ```cmd
-cd "C:\Program Files\DIS Verification GenAI"
+cd "C:\Program Files\GenAI Research"
 docker compose up -d
 start http://localhost:8501
 ```
@@ -110,7 +110,7 @@ Click "Stop Services" from Start Menu
 
 ### Method 2: Command Line
 ```cmd
-cd "C:\Program Files\DIS Verification GenAI"
+cd "C:\Program Files\GenAI Research"
 docker compose down
 ```
 
@@ -150,7 +150,7 @@ docker compose down
 - Installation log: `%TEMP%\dis-genai-install.log`
 - Application logs: Check Docker logs
   ```cmd
-  cd "C:\Program Files\DIS Verification GenAI"
+  cd "C:\Program Files\GenAI Research"
   docker compose logs
   ```
 
@@ -181,7 +181,7 @@ docker compose down
 
 1. Stop the application (Stop Services from Start Menu)
 2. Windows Settings > Apps
-3. Find "DIS Verification GenAI"
+3. Find "GenAI Research"
 4. Click Uninstall
 
 **Note**: Docker images and volumes are preserved. To remove them:
@@ -213,6 +213,6 @@ After installation and first start:
 
 ---
 
-**Welcome to DIS Verification GenAI!**
+**Welcome to GenAI Research!**
 
 For more information, visit: https://github.com/martinmanuel9/dis_verification_genai

@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-# Post-removal script for DIS Verification GenAI (Debian/Ubuntu)
+# Post-removal script for GenAI Research (Debian/Ubuntu)
 ###############################################################################
 
 set -e

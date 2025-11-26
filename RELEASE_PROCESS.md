@@ -229,9 +229,9 @@ git push origin :refs/tags/v1.0.1
 After release is published, announce to customers:
 
 ```
-Subject: DIS Verification GenAI v1.0.1 Released
+Subject: GenAI Research v1.0.1 Released
 
-We're pleased to announce the release of DIS Verification GenAI v1.0.1!
+We're pleased to announce the release of GenAI Research v1.0.1!
 
 Download: https://github.com/martinmanuel9/genai_research/releases
 

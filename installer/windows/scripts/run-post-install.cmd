@@ -2,11 +2,11 @@
 REM Wrapper to run post-install.ps1 with a visible, persistent PowerShell window
 
 SET "INSTALL_DIR=%~1"
-IF "%INSTALL_DIR%"=="" SET "INSTALL_DIR=%ProgramFiles%\DIS Verification GenAI"
+IF "%INSTALL_DIR%"=="" SET "INSTALL_DIR=%ProgramFiles%\GenAI Research"
 
 echo.
 echo ========================================================================
-echo   DIS Verification GenAI - First-Time Setup
+echo   GenAI Research - First-Time Setup
 echo ========================================================================
 echo.
 echo This wizard will help you configure your installation.

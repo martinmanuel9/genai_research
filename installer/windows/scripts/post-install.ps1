@@ -5,7 +5,7 @@
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI"
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research"
 )
 
 $ErrorActionPreference = "Continue"
@@ -48,7 +48,7 @@ try {
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
-Write-Host "  DIS Verification GenAI - First-Time Setup" -ForegroundColor Green
+Write-Host "  GenAI Research - First-Time Setup" -ForegroundColor Green
 Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor Green
 Write-Host ""
 Write-Info "Installation Directory: $InstallDir"
@@ -463,7 +463,7 @@ if ($startNow -ne "n" -and $startNow -ne "N") {
     Write-Success "✓ Build complete! Services not started."
     Write-Host ""
     Write-Info "To start the application later:"
-    Write-Host "  • Use the 'DIS Verification GenAI' shortcut from Start Menu"
+    Write-Host "  • Use the 'GenAI Research' shortcut from Start Menu"
     Write-Host "  • Or run: cd '$InstallDir' && docker compose up -d"
 }
 

@@ -65,10 +65,10 @@ If a `.env` file already exists, you'll see these options:
 #### From Command Line:
 ```powershell
 # Run the interactive environment setup
-powershell -ExecutionPolicy Bypass -File "C:\Program Files\DIS Verification GenAI\scripts\setup-env.ps1"
+powershell -ExecutionPolicy Bypass -File "C:\Program Files\GenAI Research\scripts\setup-env.ps1"
 
 # Or with custom install directory
-powershell -ExecutionPolicy Bypass -File "C:\Program Files\DIS Verification GenAI\scripts\setup-env.ps1" -InstallDir "C:\Your\Custom\Path"
+powershell -ExecutionPolicy Bypass -File "C:\Program Files\GenAI Research\scripts\setup-env.ps1" -InstallDir "C:\Your\Custom\Path"
 ```
 
 ## Configuration Backup

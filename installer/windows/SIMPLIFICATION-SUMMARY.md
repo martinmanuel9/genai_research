@@ -60,13 +60,13 @@ The Windows MSI installer was failing to create the `.env` file reliably, and wh
 **create-env.ps1 now shows:**
 ```
 ================================================================
-  DIS Verification GenAI - .env File Creation
+  GenAI Research - .env File Creation
 ================================================================
 
 [2025-11-23 23:40:15] Starting .env file creation
-[2025-11-23 23:40:15] Install Directory: C:\Program Files\DIS Verification GenAI
+[2025-11-23 23:40:15] Install Directory: C:\Program Files\GenAI Research
 [2025-11-23 23:40:15] Content Length: 450 characters
-[2025-11-23 23:40:15] Target .env path: C:\Program Files\DIS Verification GenAI\.env
+[2025-11-23 23:40:15] Target .env path: C:\Program Files\GenAI Research\.env
 [2025-11-23 23:40:15] Writing .env content to file...
 
 SUCCESS: .env file created!
@@ -123,13 +123,13 @@ First few lines of .env file:
 2. Paste .env contents in dialog
 3. Click "Install"
 4. **Watch for PowerShell window** that shows .env creation
-5. Verify file exists: `Test-Path "C:\Program Files\DIS Verification GenAI\.env"`
+5. Verify file exists: `Test-Path "C:\Program Files\GenAI Research\.env"`
 
 ### Test 2: Manual .env Creation
 
 ```powershell
-cd "C:\Program Files\DIS Verification GenAI"
-.\scripts\create-env.ps1 -InstallDir "C:\Program Files\DIS Verification GenAI" -EnvContent "TEST=hello"
+cd "C:\Program Files\GenAI Research"
+.\scripts\create-env.ps1 -InstallDir "C:\Program Files\GenAI Research" -EnvContent "TEST=hello"
 ```
 
 Should show:
@@ -181,7 +181,7 @@ If you have an existing installation:
 1. **No changes needed** - existing .env files work fine
 2. **To test new script:**
    ```powershell
-   cd "C:\Program Files\DIS Verification GenAI"
+   cd "C:\Program Files\GenAI Research"
    .\scripts\create-env.ps1 -InstallDir "." -EnvContent "$(Get-Content .env -Raw)"
    ```
 

@@ -18,7 +18,7 @@ When the installer reaches the "Configuring system and downloading models..." st
 
 1. **Progress dialog appears** showing:
    ```
-   Installing DIS Verification GenAI
+   Installing GenAI Research
 
    Status: Configuring system and downloading models (this may take 10-20 minutes)...
 
@@ -175,7 +175,7 @@ Then open `install.log` and search for `CAQuietExec:` to see all script output.
 
 ### Before (WixQuietExec)
 ```
-[Installing DIS Verification GenAI]
+[Installing GenAI Research]
 [Progress bar]
 Status: Configuring system...
 
@@ -184,7 +184,7 @@ Status: Configuring system...
 
 ### After (CAQuietExec)
 ```
-[Installing DIS Verification GenAI]
+[Installing GenAI Research]
 [Progress bar]
 Status: Configuring system...
 [Show log ▼]

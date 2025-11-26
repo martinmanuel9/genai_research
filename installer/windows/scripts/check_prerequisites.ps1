@@ -43,7 +43,7 @@ function Compare-Version {
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════"
-Write-Host "         DIS Verification GenAI - Prerequisites Check"
+Write-Host "         GenAI Research - Prerequisites Check"
 Write-Host "═══════════════════════════════════════════════════════════════"
 Write-Host ""
 

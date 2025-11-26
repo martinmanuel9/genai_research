@@ -222,7 +222,7 @@ echo ""
 if [ "$ISSUES_FOUND" -eq 0 ]; then
     print_success "Installation verification passed!"
     echo ""
-    echo "Your DIS Verification GenAI installation appears to be complete."
+    echo "Your GenAI Research installation appears to be complete."
     echo ""
     echo "Access the application at: http://localhost:8501"
 else

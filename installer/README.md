@@ -1,6 +1,6 @@
 # Installer Development Guide
 
-This directory contains the configuration and scripts for building cross-platform installers for DIS Verification GenAI.
+This directory contains the configuration and scripts for building cross-platform installers for GenAI Research.
 
 ## Table of Contents
 - [Overview](#overview)

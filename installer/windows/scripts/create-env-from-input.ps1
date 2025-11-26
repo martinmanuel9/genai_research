@@ -4,7 +4,7 @@
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI",
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research",
     [string]$EnvContent = ""
 )
 
@@ -53,7 +53,7 @@ try {
             Write-Log "WARNING: Template file not found at $templateFile"
             # Create a minimal .env file
             $minimalEnv = @"
-# DIS Verification GenAI - Environment Configuration
+# GenAI Research - Environment Configuration
 # This file was auto-generated. Please configure it before running the application.
 
 # OpenAI API Key

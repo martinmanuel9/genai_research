@@ -23,7 +23,7 @@ WARNINGS=0
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
-echo "         DIS Verification GenAI - Prerequisites Check"
+echo "         GenAI Research - Prerequisites Check"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 

@@ -94,9 +94,9 @@ Use workflow_dispatch to build without creating a tag:
 ## Installation Paths
 
 ### Windows
-- **Application:** `C:\Program Files\DIS Verification GenAI`
-- **Data:** `%PROGRAMDATA%\DIS Verification GenAI`
-- **Start Menu:** `Start > DIS Verification GenAI`
+- **Application:** `C:\Program Files\GenAI Research`
+- **Data:** `%PROGRAMDATA%\GenAI Research`
+- **Start Menu:** `Start > GenAI Research`
 
 ### Linux
 - **Application:** `/opt/dis-verification-genai`
@@ -105,8 +105,8 @@ Use workflow_dispatch to build without creating a tag:
 - **Logs:** `journalctl -u dis-verification-genai -f`
 
 ### macOS
-- **Application:** `/Applications/DIS Verification GenAI.app`
-- **Data:** `~/Library/Application Support/DIS Verification GenAI`
+- **Application:** `/Applications/GenAI Research.app`
+- **Data:** `~/Library/Application Support/GenAI Research`
 
 ## Configuration
 
@@ -129,7 +129,7 @@ All platforms use a `.env` file for configuration:
 #### Windows
 Services start manually or via shortcuts. For auto-start:
 ```powershell
-schtasks /create /tn "DIS Verification GenAI" /tr "docker compose up -d" /sc onlogon
+schtasks /create /tn "GenAI Research" /tr "docker compose up -d" /sc onlogon
 ```
 
 #### Linux
@@ -143,7 +143,7 @@ sudo systemctl status dis-verification-genai  # Check status
 #### macOS
 Services start via application launcher or manually:
 ```bash
-cd "/Applications/DIS Verification GenAI.app/Contents/Resources"
+cd "/Applications/GenAI Research.app/Contents/Resources"
 docker compose up -d
 ```
 
@@ -176,7 +176,7 @@ docker compose ps
 ### Windows
 1. Stop services: `docker compose down`
 2. Control Panel > Add or Remove Programs
-3. Uninstall "DIS Verification GenAI"
+3. Uninstall "GenAI Research"
 4. Optionally remove Docker volumes
 
 ### Linux

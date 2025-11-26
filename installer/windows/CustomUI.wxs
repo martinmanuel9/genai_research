@@ -24,10 +24,13 @@
           <Text>.env file path (REQUIRED - type or paste full path):</Text>
         </Control>
 
-        <Control Id="EnvFileEdit" Type="Edit" X="20" Y="75" Width="330" Height="18" Property="ENV_FILE_PATH" />
+        <Control Id="EnvFileEdit" Type="Edit" X="20" Y="75" Width="330" Height="18" Property="ENV_FILE_PATH" TabSkip="no">
+          <!-- Publish events to enable Next button when text changes -->
+          <Publish Property="_EnvFileChanged" Value="1">1</Publish>
+        </Control>
 
-        <Control Id="HintText" Type="Text" X="20" Y="95" Width="330" Height="10" NoPrefix="yes">
-          <Text>Example: C:\Users\YourName\Documents\.env</Text>
+        <Control Id="HintText" Type="Text" X="20" Y="95" Width="330" Height="20" NoPrefix="yes">
+          <Text>Example: C:\Users\YourName\Documents\.env (Press Tab after pasting to enable Next)</Text>
         </Control>
 
         <!-- Info text -->

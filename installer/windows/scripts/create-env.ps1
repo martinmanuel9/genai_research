@@ -4,7 +4,7 @@
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI",
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research",
     [string]$EnvContent = ""
 )
 
@@ -26,7 +26,7 @@ function Write-Log {
 
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Green
-Write-Host "  DIS Verification GenAI - .env File Creation" -ForegroundColor Green
+Write-Host "  GenAI Research - .env File Creation" -ForegroundColor Green
 Write-Host "================================================================" -ForegroundColor Green
 Write-Host ""
 

@@ -28,7 +28,7 @@ function Write-ErrorMsg {
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════"
-Write-Host "         DIS Verification GenAI - Windows MSI Builder"
+Write-Host "         GenAI Research - Windows MSI Builder"
 Write-Host "         Version: $Version"
 Write-Host "═══════════════════════════════════════════════════════════════"
 Write-Host ""

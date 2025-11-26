@@ -100,10 +100,10 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramFiles64Folder">
-        <Directory Id="INSTALLFOLDER" Name="DIS Verification GenAI" />
+        <Directory Id="INSTALLFOLDER" Name="GenAI Research" />
       </Directory>
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="DIS Verification GenAI"/>
+        <Directory Id="ApplicationProgramsFolder" Name="GenAI Research"/>
       </Directory>
       <Directory Id="DesktopFolder" Name="Desktop" />
     </Directory>
@@ -115,8 +115,8 @@
       <!-- Start Menu Shortcut -->
       <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="C1D2E3F4-A5B6-4C7D-8E9F-0A1B2C3D4E5F">
         <Shortcut Id="ApplicationStartMenuShortcut"
-                  Name="DIS Verification GenAI"
-                  Description="Open DIS Verification GenAI Web Interface"
+                  Name="GenAI Research"
+                  Description="Open GenAI Research Web Interface"
                   Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
                   Arguments='-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Start-Process \"http://localhost:8501\""'
                   WorkingDirectory="INSTALLFOLDER"
@@ -125,14 +125,14 @@
 
         <Shortcut Id="ConfigurationShortcut"
                   Name="Configure Environment"
-                  Description="Configure DIS Verification GenAI environment variables"
+                  Description="Configure GenAI Research environment variables"
                   Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
                   Arguments='-NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-env.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;'
                   WorkingDirectory="INSTALLFOLDER" />
 
         <Shortcut Id="StopServiceShortcut"
                   Name="Stop Services"
-                  Description="Stop DIS Verification GenAI services"
+                  Description="Stop GenAI Research services"
                   Target="[System64Folder]cmd.exe"
                   Arguments='/k "cd /d &quot;[INSTALLFOLDER]&quot; &amp;&amp; docker compose down"'
                   WorkingDirectory="INSTALLFOLDER" />
@@ -156,8 +156,8 @@
       <!-- Desktop Shortcut (optional) -->
       <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A">
         <Shortcut Id="ApplicationDesktopShortcut"
-                  Name="DIS Verification GenAI"
-                  Description="Open DIS Verification GenAI Web Interface"
+                  Name="GenAI Research"
+                  Description="Open GenAI Research Web Interface"
                   Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
                   Arguments='-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Start-Process \"http://localhost:8501\""'
                   WorkingDirectory="INSTALLFOLDER"

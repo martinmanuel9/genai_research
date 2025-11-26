@@ -1,10 +1,10 @@
 ###############################################################################
-# Launch Script for DIS Verification GenAI
+# Launch Script for GenAI Research
 # Builds and starts the application
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI"
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research"
 )
 
 $ErrorActionPreference = "Continue"
@@ -26,7 +26,7 @@ function Write-ErrorMsg {
 
 Write-Host ""
 Write-Host "════════════════════════════════════════════════════════════════"
-Write-Host "  DIS Verification GenAI - Launcher"
+Write-Host "  GenAI Research - Launcher"
 Write-Host "════════════════════════════════════════════════════════════════"
 Write-Host ""
 

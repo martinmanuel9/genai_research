@@ -1,6 +1,6 @@
 #!/bin/bash
 ###############################################################################
-# Post-installation script for DIS Verification GenAI (Debian/Ubuntu)
+# Post-installation script for GenAI Research (Debian/Ubuntu)
 ###############################################################################
 
 set -e
@@ -11,7 +11,7 @@ SERVICE_USER="disverif"
 
 # Create service user if it doesn't exist
 if ! id "$SERVICE_USER" &>/dev/null; then
-    useradd -r -s /bin/false -d "$DATA_DIR" -c "DIS Verification GenAI Service" "$SERVICE_USER"
+    useradd -r -s /bin/false -d "$DATA_DIR" -c "GenAI Research Service" "$SERVICE_USER"
 fi
 
 # Create data directory
@@ -31,7 +31,7 @@ fi
 # Create systemd service file
 cat > /etc/systemd/system/dis-verification-genai.service <<'EOF'
 [Unit]
-Description=DIS Verification GenAI
+Description=GenAI Research
 Requires=docker.service
 After=docker.service network-online.target
 Wants=network-online.target
@@ -65,7 +65,7 @@ systemctl daemon-reload
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-echo "  DIS Verification GenAI installed successfully!"
+echo "  GenAI Research installed successfully!"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 

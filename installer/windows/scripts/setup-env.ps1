@@ -4,7 +4,7 @@
 ###############################################################################
 
 param(
-    [string]$InstallDir = "$env:ProgramFiles\DIS Verification GenAI"
+    [string]$InstallDir = "$env:ProgramFiles\GenAI Research"
 )
 
 $ErrorActionPreference = "Continue"  # Show errors but continue with the wizard
@@ -41,7 +41,7 @@ $EnvFile = Join-Path $InstallDir ".env"
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════"
-Write-Host "         DIS Verification GenAI - Environment Setup"
+Write-Host "         GenAI Research - Environment Setup"
 Write-Host "═══════════════════════════════════════════════════════════════"
 Write-Host ""
 
@@ -234,5 +234,5 @@ Write-Info "To start the application:"
 Write-Host "  cd `"$InstallDir`""
 Write-Host "  docker compose up -d"
 Write-Host ""
-Write-Info "Or use the Start Menu shortcut: DIS Verification GenAI"
+Write-Info "Or use the Start Menu shortcut: GenAI Research"
 Write-Host ""

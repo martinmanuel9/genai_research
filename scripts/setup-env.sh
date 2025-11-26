@@ -25,7 +25,7 @@ ENV_FILE="$INSTALL_DIR/.env"
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"
-echo "         DIS Verification GenAI - Environment Setup"
+echo "         GenAI Research - Environment Setup"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
