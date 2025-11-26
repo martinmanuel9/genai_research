@@ -193,23 +193,42 @@ def get_database_health():
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
 
-# ChromaDB client initialization
+# ChromaDB client initialization - lazy loading
 import chromadb
 
 CHROMA_HOST = os.getenv("CHROMA_HOST", "chromadb")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
 
-# Initialize ChromaDB client
-try:
-    chroma_client = chromadb.HttpClient(
-        host=CHROMA_HOST,
-        port=CHROMA_PORT
-    )
-    heartbeat = chroma_client.heartbeat()
-    print(f" ChromaDB connected at {CHROMA_HOST}:{CHROMA_PORT}: {heartbeat}")
-except Exception as e:
-    print(f" ChromaDB connection failed: {e}")
-    chroma_client = None
+_chroma_client = None
+
+def get_chroma_client():
+    """Get or create ChromaDB client with lazy initialization."""
+    global _chroma_client
+    if _chroma_client is None:
+        try:
+            _chroma_client = chromadb.HttpClient(
+                host=CHROMA_HOST,
+                port=CHROMA_PORT
+            )
+            heartbeat = _chroma_client.heartbeat()
+            print(f" ChromaDB connected at {CHROMA_HOST}:{CHROMA_PORT}: {heartbeat}")
+        except Exception as e:
+            print(f" ChromaDB connection failed: {e}")
+            return None
+    return _chroma_client
+
+# For backward compatibility - lazy proxy
+class LazyChromaClient:
+    def __getattr__(self, name):
+        client = get_chroma_client()
+        if client is None:
+            raise RuntimeError("ChromaDB client not available")
+        return getattr(client, name)
+
+    def __bool__(self):
+        return get_chroma_client() is not None
+
+chroma_client = LazyChromaClient()
 
 Base = declarative_base()
 

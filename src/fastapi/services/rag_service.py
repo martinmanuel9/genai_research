@@ -35,18 +35,13 @@ from services.database import (
 logger = logging.getLogger("RAG_SERVICE_LOGGER")
 
 class RAGService:
-    def __init__(self):
+    def __init__(self, max_retries: int = 5, retry_delay: int = 3):
         # Replace HTTP URL with direct client
-        chroma_host = os.getenv("CHROMA_HOST", "chromadb")
-        chroma_port = int(os.getenv("CHROMA_PORT", "8001"))
-
-        # Native ChromaDB client (replaces HTTP session)
-        self.chroma_client = chromadb.HttpClient(
-            host=chroma_host,
-            port=chroma_port,
-            # Add auth if configured
-            headers=self._get_auth_headers()
-        )
+        self.chroma_host = os.getenv("CHROMA_HOST", "chromadb")
+        self.chroma_port = int(os.getenv("CHROMA_PORT", "8001"))
+        self._chroma_client = None
+        self._max_retries = max_retries
+        self._retry_delay = retry_delay
 
         # Embedding function (keep existing)
         self.embedding_function = HuggingFaceEmbeddings(
@@ -55,8 +50,32 @@ class RAGService:
 
         self.n_results = int(os.getenv("N_RESULTS", "5"))
 
-        # Test connection
-        self.test_connection()
+    @property
+    def chroma_client(self):
+        """Lazy initialization of ChromaDB client with retry logic."""
+        if self._chroma_client is None:
+            import time
+            last_error = None
+            for attempt in range(self._max_retries):
+                try:
+                    self._chroma_client = chromadb.HttpClient(
+                        host=self.chroma_host,
+                        port=self.chroma_port,
+                        headers=self._get_auth_headers()
+                    )
+                    # Test the connection
+                    self._chroma_client.heartbeat()
+                    logger.info(f"ChromaDB connected at {self.chroma_host}:{self.chroma_port}")
+                    break
+                except Exception as e:
+                    last_error = e
+                    if attempt < self._max_retries - 1:
+                        logger.warning(f"ChromaDB connection attempt {attempt + 1} failed: {e}. Retrying in {self._retry_delay}s...")
+                        time.sleep(self._retry_delay)
+                    else:
+                        logger.error(f"Failed to connect to ChromaDB after {self._max_retries} attempts: {e}")
+                        raise
+        return self._chroma_client
     
     def _get_auth_headers(self) -> Dict[str, str]:
         """Get authentication headers if configured"""

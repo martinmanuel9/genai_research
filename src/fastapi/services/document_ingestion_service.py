@@ -77,14 +77,28 @@ _hf_model = None
 # Module-level initialization (replaces DocumentIngestionService class)
 # =============================================================================
 
-# ChromaDB client
+# ChromaDB client - lazy initialization
 CHROMA_HOST = os.getenv("CHROMA_HOST", "chromadb")
 CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
 
-chroma_client = chromadb.HttpClient(
-    host=CHROMA_HOST,
-    port=CHROMA_PORT
-)
+_chroma_client = None
+
+def get_chroma_client():
+    """Get or create ChromaDB client with lazy initialization."""
+    global _chroma_client
+    if _chroma_client is None:
+        _chroma_client = chromadb.HttpClient(
+            host=CHROMA_HOST,
+            port=CHROMA_PORT
+        )
+    return _chroma_client
+
+# For backward compatibility - will be lazily initialized on first access
+class LazyChromaClient:
+    def __getattr__(self, name):
+        return getattr(get_chroma_client(), name)
+
+chroma_client = LazyChromaClient()
 
 # Embedding model (single instance)
 EMBEDDING_MODEL_NAME = os.getenv(
