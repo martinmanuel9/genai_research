@@ -22,7 +22,7 @@ def get_document_service() -> DocumentService:
             rag_service=RAGService(),
             agent_service=AgentService(),
             llm_service=LLMService(),
-            chroma_url=os.getenv("CHROMA_URL", "http://chromadb:8001"),
+            chroma_url=os.getenv("CHROMA_URL", "http://chromadb:8000"),
             agent_api_url=os.getenv("FASTAPI_URL", "http://localhost:9020")
         )
     return _doc_service

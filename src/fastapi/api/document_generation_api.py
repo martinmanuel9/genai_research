@@ -39,7 +39,8 @@ from integrations.chromadb_client import get_chroma_client
 from tasks.test_card_tasks import generate_test_cards as generate_test_cards_task
 
 logger = logging.getLogger("DOC_GEN_API_LOGGER")
-chroma_client = get_chroma_client()
+# Lazy initialization - don't connect at import time
+# chroma_client = get_chroma_client()  # Removed - use get_chroma_client() directly in endpoints
 doc_gen_api_router = APIRouter(prefix="/doc_gen", tags=["doc_gen"])
 
 class GenerateRequest(BaseModel):
@@ -687,7 +688,7 @@ async def get_generated_documents():
     """Get list of all generated documents from vector store"""
     try:
         # Query the generated_documents collection
-        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
         response = requests.get(
             f"{chroma_url}/documents",
             params={"collection_name": "generated_documents"},
@@ -747,7 +748,7 @@ async def export_testplan_word(
             raise HTTPException(status_code=400, detail="document_id is required")
 
         # Fetch documents from Chroma and find the one we need
-        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
         resp = requests.get(f"{chroma_url}/documents", params={"collection_name": collection_name}, timeout=30)
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=f"Failed to fetch collection: {resp.text}")
@@ -812,7 +813,7 @@ async def export_pipeline_word(
 async def delete_generated_document(document_id: str):
     """Delete a generated document from vector store"""
     try:
-        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
 
         # Delete from ChromaDB
         payload = {
@@ -2767,6 +2768,8 @@ async def bulk_update_test_cards(req: BulkUpdateTestCardsRequest):
     try:
         logger.info(f"Bulk updating {len(req.updates)} test cards in collection: {req.collection_name}")
 
+        from integrations.chromadb_client import get_chroma_client
+        chroma_client = get_chroma_client()
         collection = chroma_client.get_collection(name=req.collection_name)
 
         updated_count = 0

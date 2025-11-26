@@ -178,7 +178,7 @@ async def abort_testplan_pipeline(pipeline_id: str, purge: bool = True):
                 doc_id = meta_before.get("generated_document_id")
                 collection = meta_before.get("collection") or os.getenv("GENERATED_TESTPLAN_COLLECTION", "generated_test_plan")
                 if doc_id:
-                    chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+                    chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
                     payload = {"collection_name": collection, "ids": [doc_id]}
                     resp = requests.post(f"{chroma_url}/documents/delete", json=payload, timeout=15)
                     chroma_deleted = resp.ok
@@ -230,7 +230,7 @@ async def purge_testplan_pipeline(pipeline_id: str, delete_chroma: bool = True):
                 doc_id = meta.get("generated_document_id")
                 collection = meta.get("collection") or os.getenv("GENERATED_TESTPLAN_COLLECTION", "generated_test_plan")
                 if doc_id:
-                    chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+                    chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
                     payload = {"collection_name": collection, "ids": [doc_id]}
                     resp = requests.post(f"{chroma_url}/documents/delete", json=payload, timeout=15)
                     deleted = resp.ok
@@ -253,7 +253,7 @@ async def purge_testplan_pipeline(pipeline_id: str, delete_chroma: bool = True):
 async def delete_generated_testplan(document_id: str, collection_name: Optional[str] = None):
     """Delete a generated test plan from Chroma (defaults to generated_test_plan collection)."""
     try:
-        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8000")
         collection = collection_name or os.getenv("GENERATED_TESTPLAN_COLLECTION", "generated_test_plan")
         payload = {"collection_name": collection, "ids": [document_id]}
         resp = requests.post(f"{chroma_url}/documents/delete", json=payload, timeout=15)

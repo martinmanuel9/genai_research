@@ -6,8 +6,10 @@ from pathlib import Path
 from services.document_ingestion_service import run_ingest_job
 from integrations.chromadb_client import get_chroma_client
 
-# Get ChromaDB client instance (backward compatibility)
-chroma_client = get_chroma_client()
+# Lazy initialization helper - returns client on first actual use
+def chroma_client():
+    """Wrapper to get ChromaDB client lazily."""
+    return get_chroma_client()
 # Position-aware reconstruction imports
 from services.position_aware_reconstruction import (
     reconstruct_document_with_positions,
@@ -49,7 +51,7 @@ logger.info(f"Position-aware reconstruction: {'ENABLED' if USE_POSITION_AWARE_RE
 @vectordb_api_router.get("/collections")
 def list_collections():
     try:
-        collection_names = chroma_client.list_collections()  # Now returns just names
+        collection_names = chroma_client().list_collections()  # Now returns just names
         return {"collections": collection_names}
     except Exception as e:
         logger.error(f"Error listing collections: {e}")
@@ -63,7 +65,7 @@ def create_collection(collection_name: str = Query(...)):
     """
     try:
         # Get existing collection names safely
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
         
         if collection_name in existing_names:
             raise HTTPException(
@@ -71,7 +73,7 @@ def create_collection(collection_name: str = Query(...)):
                 detail=f"Collection '{collection_name}' already exists."
             )
         
-        chroma_client.create_collection(collection_name)
+        chroma_client().create_collection(collection_name)
         logger.info(f"Created collection: {collection_name}")
         return {"created": collection_name}
         
@@ -89,7 +91,7 @@ def get_collection_info(collection_name: str = Query(...)):
     """
     try:
         # Check if collection exists
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if collection_name not in existing_names:
             raise HTTPException(
@@ -97,7 +99,7 @@ def get_collection_info(collection_name: str = Query(...)):
                 detail=f"Collection '{collection_name}' not found."
             )
         
-        collection = chroma_client.get_collection(name=collection_name)
+        collection = chroma_client().get_collection(name=collection_name)
         return {"name": collection.name}
         
     except HTTPException:
@@ -114,7 +116,7 @@ def delete_collection(collection_name: str = Query(...)):
     """
     try:
         # Get existing collection names safely
-        existing_collections = chroma_client.list_collections()
+        existing_collections = chroma_client().list_collections()
 
 
         if collection_name not in existing_collections:
@@ -123,7 +125,7 @@ def delete_collection(collection_name: str = Query(...)):
                 detail=f"Collection '{collection_name}' not found."
             )
 
-        chroma_client.delete_collection(collection_name)
+        chroma_client().delete_collection(collection_name)
         logger.info(f"Deleted collection: {collection_name}")
         return {"deleted": collection_name}
         
@@ -141,7 +143,7 @@ def edit_collection_name(old_name: str = Query(...), new_name: str = Query(...))
     """
     try:
         # Get existing collection names
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
 
         if old_name not in existing_names:
             raise HTTPException(
@@ -156,10 +158,10 @@ def edit_collection_name(old_name: str = Query(...), new_name: str = Query(...))
             )
 
         # Retrieve the old collection
-        collection = chroma_client.get_collection(name=old_name)
+        collection = chroma_client().get_collection(name=old_name)
 
         # Create a new collection with the new name
-        new_collection = chroma_client.create_collection(name=new_name)
+        new_collection = chroma_client().create_collection(name=new_name)
 
         # Retrieve all documents from the old collection
         old_docs = collection.get()
@@ -167,7 +169,7 @@ def edit_collection_name(old_name: str = Query(...), new_name: str = Query(...))
             new_collection.add(ids=old_docs["ids"], documents=old_docs["documents"])
 
         # Delete the old collection
-        chroma_client.delete_collection(old_name)
+        chroma_client().delete_collection(old_name)
 
         return {"old_name": old_name, "new_name": new_name}
         
@@ -190,7 +192,7 @@ class DocumentAddRequest(BaseModel):
 def add_documents(req: DocumentAddRequest):
     try:
         # Check if the collection exists
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if req.collection_name not in existing_names:
             raise HTTPException(
@@ -199,7 +201,7 @@ def add_documents(req: DocumentAddRequest):
             )
         
         # Retrieve the collection
-        collection = chroma_client.get_collection(req.collection_name)
+        collection = chroma_client().get_collection(req.collection_name)
         
         # Add documents along with embeddings and metadatas
         collection.add(
@@ -231,7 +233,7 @@ def remove_documents(req: DocumentRemoveRequest):
     """
     try:
         # Check if the collection exists first
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if req.collection_name not in existing_names:
             raise HTTPException(
@@ -240,7 +242,7 @@ def remove_documents(req: DocumentRemoveRequest):
             )
 
         # Now, safely retrieve the collection (since we verified it exists)
-        collection = chroma_client.get_collection(req.collection_name)
+        collection = chroma_client().get_collection(req.collection_name)
 
         # Ensure at least one of the documents exists before attempting to delete
         existing_docs = collection.get()
@@ -278,7 +280,7 @@ def edit_document(req: DocumentEditRequest):
     """
     try:
         # Check if the collection exists first
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if req.collection_name not in existing_names:
             raise HTTPException(
@@ -287,7 +289,7 @@ def edit_document(req: DocumentEditRequest):
             )
 
         # Now, safely retrieve the collection
-        collection = chroma_client.get_collection(req.collection_name)
+        collection = chroma_client().get_collection(req.collection_name)
 
         # Ensure the document exists before attempting to update
         existing_docs = collection.get()
@@ -320,13 +322,13 @@ def list_documents(collection_name: str = Query(...)):
     """
     try:
         # Check if the collection exists first
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if collection_name not in existing_names:
             raise HTTPException(status_code=404, detail=f"Collection '{collection_name}' not found.")
 
         # Now, safely retrieve the collection
-        collection = chroma_client.get_collection(name=collection_name)
+        collection = chroma_client().get_collection(name=collection_name)
 
         # Retrieve documents
         docs = collection.get()
@@ -349,7 +351,7 @@ class DocumentQueryRequest(BaseModel):
 def query_documents(req: DocumentQueryRequest):
     try:
         # Check if the collection exists first
-        existing_names = chroma_client.list_collections()
+        existing_names = chroma_client().list_collections()
                 
         if req.collection_name not in existing_names:
             raise HTTPException(
@@ -358,7 +360,7 @@ def query_documents(req: DocumentQueryRequest):
             )
 
         # Retrieve the collection
-        collection = chroma_client.get_collection(req.collection_name)
+        collection = chroma_client().get_collection(req.collection_name)
 
         # Perform the query using the provided embeddings and parameters
         query_result = collection.query(
@@ -427,7 +429,7 @@ async def upload_and_process_documents(
         logger.info(f"  File {idx+1}: {f.filename} (content_type: {f.content_type})")
 
     # 1) Validate collection
-    if collection_name not in chroma_client.list_collections():
+    if collection_name not in chroma_client().list_collections():
         raise HTTPException(404, f"Collection '{collection_name}' not found")
 
     # 2) Generate a single job_id
@@ -639,7 +641,7 @@ def reconstruct_document(document_id: str, collection_name: str = Query(...), re
     legacy reconstruction (images appended to chunks).
     """
     try:
-        collection = chroma_client.get_collection(name=collection_name)
+        collection = chroma_client().get_collection(name=collection_name)
 
         # Get all chunks for this document
         results = collection.get(
@@ -828,8 +830,8 @@ async def ingest_url(req: URLIngestRequest):
     payloads = [{"filename": filename, "content": html_content}]
 
     # 3) Ensure target collection exists
-    if req.collection_name not in chroma_client.list_collections():
-        chroma_client.create_collection(req.collection_name)
+    if req.collection_name not in chroma_client().list_collections():
+        chroma_client().create_collection(req.collection_name)
 
     # 4) Generate a job_id and synchronously run ingest job
     job_id = uuid.uuid4().hex

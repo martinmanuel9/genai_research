@@ -72,9 +72,9 @@ class Settings(BaseSettings):
     db_pool_pre_ping: bool = True
     db_echo: bool = False
 
-    # ChromaDB Configuration
+    # ChromaDB Configuration (internal Docker port is 8000, external host port is 8001)
     chroma_host: str = "chromadb"
-    chroma_port: int = 8001
+    chroma_port: int = 8000
 
     # Redis Configuration
     redis_url: str = "redis://redis:6379/0"

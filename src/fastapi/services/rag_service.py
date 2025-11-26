@@ -38,7 +38,7 @@ class RAGService:
     def __init__(self, max_retries: int = 5, retry_delay: int = 3):
         # Replace HTTP URL with direct client
         self.chroma_host = os.getenv("CHROMA_HOST", "chromadb")
-        self.chroma_port = int(os.getenv("CHROMA_PORT", "8001"))
+        self.chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
         self._chroma_client = None
         self._max_retries = max_retries
         self._retry_delay = retry_delay
