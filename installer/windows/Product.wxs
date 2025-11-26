@@ -44,21 +44,24 @@
     <!-- Custom action to copy .env file during installation -->
     <CustomAction Id="SetCopyEnvFileCommand"
                   Property="CopyEnvFile"
-                  Value="&quot;[System64Folder]cmd.exe&quot; /c &quot;copy &quot;[ENV_FILE_PATH]&quot; &quot;[INSTALLFOLDER].env&quot; &quot;"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c copy &quot;[ENV_FILE_PATH]&quot; &quot;[INSTALLFOLDER].env&quot;"
                   Execute="immediate" />
 
     <CustomAction Id="CopyEnvFile"
                   BinaryKey="WixCA"
-                  DllEntry="CAQuietExec"
+                  DllEntry="WixQuietExec"
                   Execute="deferred"
                   Return="check"
                   Impersonate="no" />
 
-    <!-- Custom action to run setup script in a VISIBLE PowerShell window -->
-    <!-- Uses cmd /c start to ensure the window is visible to the user -->
+    <!--
+    Custom action to run setup script in a MAXIMIZED, VISIBLE PowerShell window.
+    This opens a large console window so users can see Docker build progress.
+    The /MAX flag ensures the window is maximized and visible.
+    -->
     <CustomAction Id="SetRunSetupScriptCommand"
                   Property="RunSetupScript"
-                  Value="&quot;[System64Folder]cmd.exe&quot; /c start &quot;GenAI Research Setup&quot; /wait &quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-during-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c start &quot;GenAI Research - Installation Progress (DO NOT CLOSE)&quot; /MAX /WAIT powershell.exe -NoProfile -NoExit -ExecutionPolicy Bypass -Command &quot;Set-Location '[INSTALLFOLDER]'; Write-Host ''; Write-Host '========================================' -ForegroundColor Cyan; Write-Host '  GenAI Research Installation' -ForegroundColor Cyan; Write-Host '  This window shows setup progress' -ForegroundColor Cyan; Write-Host '========================================' -ForegroundColor Cyan; Write-Host ''; &amp; '[INSTALLFOLDER]scripts\setup-during-install.ps1' -InstallDir '[INSTALLFOLDER]'&quot;"
                   Execute="immediate" />
 
     <CustomAction Id="RunSetupScript"
@@ -72,7 +75,7 @@
       <!-- Set command for copying .env file -->
       <Custom Action="SetCopyEnvFileCommand" Before="CopyEnvFile">NOT Installed AND ENV_FILE_PATH</Custom>
 
-      <!-- Copy .env file (REQUIRED) -->
+      <!-- Copy .env file -->
       <Custom Action="CopyEnvFile" After="InstallFiles">NOT Installed AND ENV_FILE_PATH</Custom>
 
       <!-- Set command for running setup script -->
@@ -89,7 +92,7 @@
     <!-- Progress text for custom actions -->
     <UI>
       <ProgressText Action="CopyEnvFile">Copying environment configuration...</ProgressText>
-      <ProgressText Action="RunSetupScript">Setting up application (building Docker images, downloading models - this will take 10-20 minutes)...</ProgressText>
+      <ProgressText Action="RunSetupScript">Opening setup window - Please watch the PowerShell window for progress...</ProgressText>
     </UI>
 
     <!-- License Agreement -->

@@ -91,31 +91,50 @@ function Write-LogStep {
 }
 
 ###############################################################################
-# Set console appearance for visibility
+# Set console appearance for maximum visibility
 ###############################################################################
 try {
-    $host.UI.RawUI.WindowTitle = "GenAI Research - Installation Setup"
+    # Set window title
+    $host.UI.RawUI.WindowTitle = "GenAI Research - Installation Progress - DO NOT CLOSE"
+
+    # Set colors for high visibility
     $host.UI.RawUI.BackgroundColor = "DarkBlue"
     $host.UI.RawUI.ForegroundColor = "White"
+
+    # Try to maximize window and set buffer size
+    try {
+        $maxSize = $host.UI.RawUI.MaxPhysicalWindowSize
+        $host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, $maxSize.Height)
+        $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, 9999)
+    } catch { }
+
     Clear-Host
 } catch { }
 
 ###############################################################################
-# Header
+# Header - Large and prominent
 ###############################################################################
 Write-Host ""
-Write-Host "╔══════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║                                                                  ║" -ForegroundColor Cyan
-Write-Host "║           GenAI Research - Installation Setup                    ║" -ForegroundColor Cyan
-Write-Host "║                                                                  ║" -ForegroundColor Cyan
-Write-Host "║   This window will show real-time progress of:                   ║" -ForegroundColor Cyan
-Write-Host "║   • Docker image builds                                          ║" -ForegroundColor Cyan
-Write-Host "║   • Container startup                                            ║" -ForegroundColor Cyan
-Write-Host "║   • Service verification                                         ║" -ForegroundColor Cyan
-Write-Host "║                                                                  ║" -ForegroundColor Cyan
-Write-Host "║   DO NOT CLOSE THIS WINDOW until setup is complete!              ║" -ForegroundColor Yellow
-Write-Host "║                                                                  ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "    ╔════════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Green
+Write-Host "    ║                                                                                ║" -ForegroundColor Green
+Write-Host "    ║                    GENAI RESEARCH - INSTALLATION IN PROGRESS                   ║" -ForegroundColor Green
+Write-Host "    ║                                                                                ║" -ForegroundColor Green
+Write-Host "    ╠════════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor Green
+Write-Host "    ║                                                                                ║" -ForegroundColor Cyan
+Write-Host "    ║   This window shows REAL-TIME installation progress. You will see:            ║" -ForegroundColor Cyan
+Write-Host "    ║                                                                                ║" -ForegroundColor Cyan
+Write-Host "    ║      • File verification and setup                                             ║" -ForegroundColor Cyan
+Write-Host "    ║      • Docker image builds (this takes 10-20 minutes)                          ║" -ForegroundColor Cyan
+Write-Host "    ║      • Container startup and health checks                                     ║" -ForegroundColor Cyan
+Write-Host "    ║      • Service verification                                                    ║" -ForegroundColor Cyan
+Write-Host "    ║                                                                                ║" -ForegroundColor Cyan
+Write-Host "    ╠════════════════════════════════════════════════════════════════════════════════╣" -ForegroundColor Yellow
+Write-Host "    ║                                                                                ║" -ForegroundColor Yellow
+Write-Host "    ║   ██  DO NOT CLOSE THIS WINDOW - Installation will fail if closed!  ██        ║" -ForegroundColor Yellow
+Write-Host "    ║                                                                                ║" -ForegroundColor Yellow
+Write-Host "    ╚════════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Yellow
+Write-Host ""
 Write-Host ""
 
 Write-Log "Install Directory: $InstallDir"
@@ -125,9 +144,76 @@ if ($LogFile) {
 Write-Host ""
 
 ###############################################################################
+# STEP 0: Verify Installation Directory Contents
+###############################################################################
+Write-LogStep "STEP 0/6: Verifying Installation Directory"
+
+Write-Log "Checking installation directory: $InstallDir"
+
+if (-not (Test-Path $InstallDir)) {
+    Write-LogError "Installation directory does not exist: $InstallDir"
+    Write-LogError "This is a critical error - the MSI did not install files correctly."
+    Wait-ForUserInput "Press Enter to exit..."
+    exit 1
+}
+
+# Check for critical files
+$criticalFiles = @(
+    "docker-compose.yml",
+    "Dockerfile.base",
+    "pyproject.toml",
+    "VERSION"
+)
+
+$missingFiles = @()
+foreach ($file in $criticalFiles) {
+    $filePath = Join-Path $InstallDir $file
+    if (Test-Path $filePath) {
+        Write-LogSuccess "Found: $file"
+    } else {
+        Write-LogError "MISSING: $file"
+        $missingFiles += $file
+    }
+}
+
+# Check for critical directories
+$criticalDirs = @("src", "scripts")
+foreach ($dir in $criticalDirs) {
+    $dirPath = Join-Path $InstallDir $dir
+    if (Test-Path $dirPath) {
+        $fileCount = (Get-ChildItem -Path $dirPath -Recurse -File).Count
+        Write-LogSuccess "Found: $dir/ ($fileCount files)"
+    } else {
+        Write-LogError "MISSING: $dir/"
+        $missingFiles += "$dir/"
+    }
+}
+
+if ($missingFiles.Count -gt 0) {
+    Write-Host ""
+    Write-LogError "Critical files are missing from the installation!"
+    Write-LogError "Missing: $($missingFiles -join ', ')"
+    Write-Host ""
+    Write-Log "This usually means:"
+    Write-Log "  1. The MSI installer was built incorrectly"
+    Write-Log "  2. The installation was interrupted"
+    Write-Log "  3. Antivirus software blocked file extraction"
+    Write-Host ""
+    Write-Log "Please try:"
+    Write-Log "  1. Uninstall the application from Add/Remove Programs"
+    Write-Log "  2. Download a fresh copy of the installer"
+    Write-Log "  3. Temporarily disable antivirus during installation"
+    Write-Log "  4. Run the installer as Administrator"
+    Wait-ForUserInput "Press Enter to exit..."
+    exit 1
+}
+
+Write-LogSuccess "All critical files verified"
+
+###############################################################################
 # STEP 1: Verify .env File
 ###############################################################################
-Write-LogStep "STEP 1/5: Verifying Environment Configuration"
+Write-LogStep "STEP 1/6: Verifying .env File"
 
 $envFile = Join-Path $InstallDir ".env"
 
@@ -151,7 +237,7 @@ Write-LogSuccess ".env file verified ($lineCount lines)"
 ###############################################################################
 # STEP 2: Verify Docker
 ###############################################################################
-Write-LogStep "STEP 2/5: Checking Docker Desktop"
+Write-LogStep "STEP 2/6: Checking Docker Desktop"
 
 Write-Log "Checking if Docker is running..."
 
@@ -183,7 +269,7 @@ Write-Log "Docker version: $dockerVersion"
 ###############################################################################
 # STEP 3: System Detection
 ###############################################################################
-Write-LogStep "STEP 3/5: Detecting System Hardware"
+Write-LogStep "STEP 3/6: Detecting System Hardware"
 
 try {
     $gpus = Get-WmiObject Win32_VideoController
@@ -210,7 +296,7 @@ Write-LogSuccess "System detection complete"
 ###############################################################################
 # STEP 4: Build Docker Images
 ###############################################################################
-Write-LogStep "STEP 4/5: Building Docker Images"
+Write-LogStep "STEP 4/6: Building Docker Images"
 
 Set-Location $InstallDir
 
@@ -281,7 +367,7 @@ $images | ForEach-Object { Write-Log "  - $_" }
 ###############################################################################
 # STEP 5: Start Services
 ###############################################################################
-Write-LogStep "STEP 5/5: Starting Application Services"
+Write-LogStep "STEP 5/6: Starting Application Services"
 
 Write-Log "Starting Docker containers..."
 
@@ -309,6 +395,18 @@ Write-Log "Container Status:"
 $running | ForEach-Object { Write-Log "  $_" }
 
 $runningCount = (docker compose ps --status running --format "{{.Name}}" 2>&1 | Measure-Object -Line).Lines
+
+###############################################################################
+# STEP 6: Verify Services
+###############################################################################
+Write-LogStep "STEP 6/6: Verifying Services"
+
+if ($runningCount -gt 0) {
+    Write-LogSuccess "$runningCount container(s) running"
+} else {
+    Write-LogWarning "No containers appear to be running"
+    Write-Log "You may need to start services manually using the Start Menu shortcut"
+}
 
 ###############################################################################
 # INSTALLATION COMPLETE
