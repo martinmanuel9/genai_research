@@ -45,19 +45,19 @@
     =========================================================================
     CUSTOM ACTIONS - Copy .env and run setup script
     =========================================================================
-    Note: These run AFTER InstallFiles, so all application files are already
-    installed to INSTALLFOLDER before these execute.
+    1. CopyEnvFile: Copies the user's .env file to the install directory
+    2. LaunchSetupScript: Opens a VISIBLE command window to run setup
 
-    Return="ignore" ensures installation completes even if scripts fail.
+    The setup window opens AFTER the MSI installation completes, so users
+    can see Docker build progress, container startup, etc.
     =========================================================================
     -->
 
-    <!-- Immediate action to set up the command for copying .env file -->
+    <!-- Copy .env file using cmd.exe (runs quietly during install) -->
     <CustomAction Id="SetCopyEnvFileCmd"
                   Property="CopyEnvFile"
                   Value="&quot;[SystemFolder]cmd.exe&quot; /c copy /Y &quot;[ENV_FILE_PATH]&quot; &quot;[INSTALLFOLDER].env&quot;" />
 
-    <!-- Deferred action to actually copy the .env file -->
     <CustomAction Id="CopyEnvFile"
                   BinaryKey="WixCA"
                   DllEntry="WixQuietExec"
@@ -65,28 +65,34 @@
                   Return="ignore"
                   Impersonate="no" />
 
-    <!-- Immediate action to set up the command for running setup script -->
-    <CustomAction Id="SetRunSetupScriptCmd"
-                  Property="RunSetupScript"
-                  Value="&quot;[SystemFolder]cmd.exe&quot; /c start &quot;GenAI Research Setup&quot; /WAIT &quot;[SystemFolder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-during-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;" />
+    <!--
+    Launch a VISIBLE command window for setup.
+    This is an IMMEDIATE action that runs at the end of the UI sequence.
+    It uses "start" to create a new window that persists independently.
+    -->
+    <CustomAction Id="LaunchSetupScript"
+                  Property="WixShellExecTarget"
+                  Value="[INSTALLFOLDER]scripts\launch-setup.cmd"
+                  Execute="immediate" />
 
-    <!-- Deferred action to run the setup script in a visible window -->
-    <CustomAction Id="RunSetupScript"
+    <CustomAction Id="RunSetupVisible"
                   BinaryKey="WixCA"
-                  DllEntry="WixQuietExec"
-                  Execute="deferred"
+                  DllEntry="WixShellExec"
+                  Execute="immediate"
                   Return="ignore"
                   Impersonate="yes" />
 
     <InstallExecuteSequence>
-      <!-- Set up and execute .env copy -->
+      <!-- Copy .env file during installation -->
       <Custom Action="SetCopyEnvFileCmd" Before="CopyEnvFile"><![CDATA[ENV_FILE_PATH <> "" AND NOT Installed]]></Custom>
       <Custom Action="CopyEnvFile" After="InstallFiles"><![CDATA[ENV_FILE_PATH <> "" AND NOT Installed]]></Custom>
-
-      <!-- Set up and execute setup script -->
-      <Custom Action="SetRunSetupScriptCmd" Before="RunSetupScript"><![CDATA[NOT Installed]]></Custom>
-      <Custom Action="RunSetupScript" After="CopyEnvFile"><![CDATA[NOT Installed]]></Custom>
     </InstallExecuteSequence>
+
+    <!-- Launch the setup window from the UI sequence after install completes -->
+    <InstallUISequence>
+      <Custom Action="LaunchSetupScript" After="ExecuteAction"><![CDATA[NOT Installed]]></Custom>
+      <Custom Action="RunSetupVisible" After="LaunchSetupScript"><![CDATA[NOT Installed]]></Custom>
+    </InstallUISequence>
 
     <!-- UI -->
     <UIRef Id="CustomInstallDir" />
