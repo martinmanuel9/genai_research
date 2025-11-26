@@ -1,0 +1,17 @@
+#!/bin/bash
+###############################################################################
+# Pre-removal script for DIS Verification GenAI (Debian/Ubuntu)
+###############################################################################
+
+set -e
+
+# Stop and disable service
+if systemctl is-active --quiet dis-verification-genai; then
+    systemctl stop dis-verification-genai
+fi
+
+if systemctl is-enabled --quiet dis-verification-genai; then
+    systemctl disable dis-verification-genai
+fi
+
+exit 0

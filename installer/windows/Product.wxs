@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define ProductName = "GenAI Research" ?>
+  <?define ProductShortName = "genai-research" ?>
+  <?define ProductVersion = "VERSION_PLACEHOLDER" ?>
+  <?define Manufacturer = "Your Organization" ?>
+  <?define UpgradeCode = "34c3ed39-12a4-44d1-b571-74e406f9beb1" ?>
+
+  <Product Id="*"
+           Name="$(var.ProductName)"
+           Language="1033"
+           Version="$(var.ProductVersion)"
+           Manufacturer="$(var.Manufacturer)"
+           UpgradeCode="$(var.UpgradeCode)">
+
+    <Package InstallerVersion="500"
+             Compressed="yes"
+             InstallScope="perMachine"
+             Description="$(var.ProductName) Installer"
+             Comments="AI-powered research and verification system"
+             Manufacturer="$(var.Manufacturer)"
+             Platform="x64" />
+
+    <!-- Upgrade logic -->
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Properties -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/martinmanuel9/genai_research" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/martinmanuel9/genai_research" />
+
+    <!-- Add/Remove Programs Icon -->
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Icon Id="AppIcon" SourceFile="app-icon.ico" />
+
+    <!-- Feature definition -->
+    <Feature Id="ProductFeature" Title="GenAI Research" Level="1">
+      <ComponentGroupRef Id="ApplicationFiles" />
+      <ComponentGroupRef Id="ShortcutComponents" />
+    </Feature>
+
+    <!-- Custom action to copy .env file during installation -->
+    <CustomAction Id="SetCopyEnvFileCommand"
+                  Property="CopyEnvFile"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c &quot;copy &quot;[ENV_FILE_PATH]&quot; &quot;[INSTALLFOLDER].env&quot; &quot;"
+                  Execute="immediate" />
+
+    <CustomAction Id="CopyEnvFile"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="check"
+                  Impersonate="no" />
+
+    <!-- Custom action to run setup script during installation with progress -->
+    <CustomAction Id="SetRunSetupScriptCommand"
+                  Property="RunSetupScript"
+                  Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-during-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot; -EnvFilePath &quot;[ENV_FILE_PATH]&quot;"
+                  Execute="immediate" />
+
+    <CustomAction Id="RunSetupScript"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes" />
+
+    <InstallExecuteSequence>
+      <!-- Set command for copying .env file -->
+      <Custom Action="SetCopyEnvFileCommand" Before="CopyEnvFile">NOT Installed AND ENV_FILE_PATH</Custom>
+
+      <!-- Copy .env file (REQUIRED) -->
+      <Custom Action="CopyEnvFile" After="InstallFiles">NOT Installed AND ENV_FILE_PATH</Custom>
+
+      <!-- Set command for running setup script -->
+      <Custom Action="SetRunSetupScriptCommand" After="CopyEnvFile">NOT Installed AND ENV_FILE_PATH</Custom>
+
+      <!-- Run setup script after files are installed (only if .env was copied successfully) -->
+      <Custom Action="RunSetupScript" After="SetRunSetupScriptCommand">NOT Installed AND ENV_FILE_PATH</Custom>
+    </InstallExecuteSequence>
+
+    <!-- UI -->
+    <UIRef Id="CustomInstallDir" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+    <!-- Progress text for custom actions -->
+    <UI>
+      <ProgressText Action="CopyEnvFile">Copying environment configuration...</ProgressText>
+      <ProgressText Action="RunSetupScript">Setting up application (building Docker images, downloading models - this will take 10-20 minutes)...</ProgressText>
+    </UI>
+
+    <!-- License Agreement -->
+    <WixVariable Id="WixUILicenseRtf" Value="LICENSE.rtf" />
+
+  </Product>
+
+  <!-- Directory structure -->
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="DIS Verification GenAI" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="DIS Verification GenAI"/>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+  </Fragment>
+
+  <!-- Shortcut Components -->
+  <Fragment>
+    <ComponentGroup Id="ShortcutComponents">
+      <!-- Start Menu Shortcut -->
+      <Component Id="ApplicationShortcut" Directory="ApplicationProgramsFolder" Guid="C1D2E3F4-A5B6-4C7D-8E9F-0A1B2C3D4E5F">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="DIS Verification GenAI"
+                  Description="Open DIS Verification GenAI Web Interface"
+                  Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments='-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Start-Process \"http://localhost:8501\""'
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon"
+                  IconIndex="0" />
+
+        <Shortcut Id="ConfigurationShortcut"
+                  Name="Configure Environment"
+                  Description="Configure DIS Verification GenAI environment variables"
+                  Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments='-NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\setup-env.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;'
+                  WorkingDirectory="INSTALLFOLDER" />
+
+        <Shortcut Id="StopServiceShortcut"
+                  Name="Stop Services"
+                  Description="Stop DIS Verification GenAI services"
+                  Target="[System64Folder]cmd.exe"
+                  Arguments='/k "cd /d &quot;[INSTALLFOLDER]&quot; &amp;&amp; docker compose down"'
+                  WorkingDirectory="INSTALLFOLDER" />
+
+        <Shortcut Id="FirstTimeSetupShortcut"
+                  Name="First-Time Setup"
+                  Description="Run the first-time setup wizard"
+                  Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments='-NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\post-install.ps1&quot; -InstallDir &quot;[INSTALLFOLDER]&quot;'
+                  WorkingDirectory="INSTALLFOLDER" />
+
+        <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\[Manufacturer]\[ProductName]"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+
+      <!-- Desktop Shortcut (optional) -->
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="DIS Verification GenAI"
+                  Description="Open DIS Verification GenAI Web Interface"
+                  Target="[System64Folder]WindowsPowerShell\v1.0\powershell.exe"
+                  Arguments='-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -Command "Start-Process \"http://localhost:8501\""'
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="AppIcon"
+                  IconIndex="0" />
+        <RemoveFolder Id="CleanUpDesktopShortCut" On="uninstall"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\[Manufacturer]\[ProductName]"
+                       Name="desktop_shortcut"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+  </Fragment>
+</Wix>
