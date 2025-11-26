@@ -125,7 +125,7 @@ Write-Host "    ║                                                             
 Write-Host "    ║   This window shows REAL-TIME installation progress. You will see:            ║" -ForegroundColor Cyan
 Write-Host "    ║                                                                                ║" -ForegroundColor Cyan
 Write-Host "    ║      • File verification and setup                                             ║" -ForegroundColor Cyan
-Write-Host "    ║      • Docker image builds (this takes 10-20 minutes)                          ║" -ForegroundColor Cyan
+Write-Host "    ║      • Docker image builds - this takes 10-20 minutes                           ║" -ForegroundColor Cyan
 Write-Host "    ║      • Container startup and health checks                                     ║" -ForegroundColor Cyan
 Write-Host "    ║      • Service verification                                                    ║" -ForegroundColor Cyan
 Write-Host "    ║                                                                                ║" -ForegroundColor Cyan
@@ -239,6 +239,52 @@ Write-LogSuccess ".env file verified - $lineCount lines"
 ###############################################################################
 Write-LogStep "STEP 2/6: Checking Docker Desktop"
 
+# First, check if Docker is installed
+Write-Log "Checking if Docker Desktop is installed..."
+
+$dockerInstalled = $false
+$dockerExePath = $null
+
+# Common Docker Desktop installation paths
+$dockerPaths = @(
+    "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+    "$env:ProgramFiles\Docker\Docker\resources\bin\docker.exe",
+    "${env:ProgramFiles(x86)}\Docker\Docker\Docker Desktop.exe"
+)
+
+foreach ($path in $dockerPaths) {
+    if (Test-Path $path) {
+        $dockerInstalled = $true
+        if ($path -like "*Docker Desktop.exe") {
+            $dockerExePath = $path
+        }
+        break
+    }
+}
+
+# Also check if docker command is available in PATH
+$dockerCmd = Get-Command docker -ErrorAction SilentlyContinue
+if ($dockerCmd) {
+    $dockerInstalled = $true
+}
+
+if (-not $dockerInstalled) {
+    Write-LogError "Docker Desktop is NOT INSTALLED!"
+    Write-Host ""
+    Write-LogError "Docker Desktop is required to run GenAI Research."
+    Write-Host ""
+    Write-Log "Please install Docker Desktop from: https://www.docker.com/products/docker-desktop"
+    Write-Host ""
+    Write-Log "After installing Docker Desktop:"
+    Write-Log "1. Restart your computer"
+    Write-Log "2. Run 'First-Time Setup' from the Start Menu"
+    Wait-ForUserInput "Press Enter to exit..."
+    exit 1
+}
+
+Write-LogSuccess "Docker Desktop is installed"
+
+# Now check if Docker is running
 Write-Log "Checking if Docker is running..."
 
 $dockerRunning = $false
@@ -250,17 +296,68 @@ try {
 }
 
 if (-not $dockerRunning) {
-    Write-LogError "Docker Desktop is NOT running!"
+    Write-LogWarning "Docker Desktop is not running - attempting to start it..."
     Write-Host ""
-    Write-LogWarning "Please:"
-    Write-Log "1. Start Docker Desktop from the Start Menu"
-    Write-Log "2. Wait for Docker to fully start (whale icon in system tray)"
-    Write-Log "3. Run 'First-Time Setup' from Start Menu"
-    Wait-ForUserInput "Press Enter to exit..."
-    exit 1
-}
 
-Write-LogSuccess "Docker is running!"
+    # Try to find and start Docker Desktop
+    $dockerDesktopPath = "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe"
+
+    if (Test-Path $dockerDesktopPath) {
+        Write-Log "Starting Docker Desktop..."
+        Start-Process -FilePath $dockerDesktopPath -WindowStyle Minimized
+
+        # Wait for Docker to start - check every 5 seconds for up to 2 minutes
+        $maxWaitSeconds = 120
+        $waitInterval = 5
+        $waited = 0
+
+        Write-Log "Waiting for Docker to initialize - this may take up to 2 minutes..."
+        Write-Host ""
+
+        while ($waited -lt $maxWaitSeconds) {
+            Start-Sleep -Seconds $waitInterval
+            $waited += $waitInterval
+
+            # Show progress
+            $progress = [math]::Round(($waited / $maxWaitSeconds) * 100)
+            Write-Host "`r  Waiting... $waited seconds / $maxWaitSeconds seconds ($progress%)" -NoNewline
+
+            # Check if Docker is now running
+            try {
+                $dockerInfo = docker info 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    $dockerRunning = $true
+                    Write-Host ""
+                    Write-Host ""
+                    Write-LogSuccess "Docker Desktop started successfully!"
+                    break
+                }
+            } catch { }
+        }
+
+        Write-Host ""
+
+        if (-not $dockerRunning) {
+            Write-Host ""
+            Write-LogError "Docker Desktop failed to start within $maxWaitSeconds seconds"
+            Write-Host ""
+            Write-Log "Please try the following:"
+            Write-Log "1. Open Docker Desktop manually from the Start Menu"
+            Write-Log "2. Wait for it to fully start - look for whale icon in system tray"
+            Write-Log "3. Run 'First-Time Setup' from the Start Menu"
+            Wait-ForUserInput "Press Enter to exit..."
+            exit 1
+        }
+    } else {
+        Write-LogError "Could not find Docker Desktop executable"
+        Write-Log "Please start Docker Desktop manually from the Start Menu"
+        Write-Log "Then run 'First-Time Setup' from the Start Menu"
+        Wait-ForUserInput "Press Enter to exit..."
+        exit 1
+    }
+} else {
+    Write-LogSuccess "Docker is already running!"
+}
 
 # Show Docker version
 $dockerVersion = docker --version 2>&1
@@ -281,7 +378,7 @@ try {
         }
     }
     if (-not $hasGPU) {
-        Write-Log "No dedicated GPU detected (will use CPU mode)"
+        Write-Log "No dedicated GPU detected - will use CPU mode"
     }
 
     $ram = Get-WmiObject Win32_ComputerSystem
