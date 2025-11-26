@@ -10,25 +10,42 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-# Setup logging
-$LogDir = Join-Path $InstallDir "logs"
-if (-not (Test-Path $LogDir)) {
-    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+# Function to wait for user input (works in all PowerShell contexts)
+function Wait-ForKey {
+    param([string]$Message = "Press Enter to continue...")
+    Write-Host ""
+    Write-Host $Message -ForegroundColor Yellow
+    Read-Host
 }
-$LogFile = Join-Path $LogDir "setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+# Setup logging - try install dir first, fallback to temp
+$LogDir = Join-Path $InstallDir "logs"
+$LogFile = $null
+
+try {
+    if (-not (Test-Path $LogDir)) {
+        New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+    }
+    $LogFile = Join-Path $LogDir "setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    Set-Content -Path $LogFile -Value "GenAI Research Setup Log - $(Get-Date)" -ErrorAction Stop
+    Write-Host "[INFO] Log file: $LogFile" -ForegroundColor Cyan
+} catch {
+    # Fallback to temp directory
+    $LogFile = Join-Path $env:TEMP "genai-setup-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    try {
+        Set-Content -Path $LogFile -Value "GenAI Research Setup Log - $(Get-Date)" -ErrorAction Stop
+        Write-Host "[WARNING] Using temp log: $LogFile" -ForegroundColor Yellow
+    } catch {
+        $LogFile = $null
+        Write-Host "[WARNING] Could not create log file" -ForegroundColor Yellow
+    }
+}
 
 # Load shared utilities (interactive mode)
 . "$PSScriptRoot\docker-utils.ps1"
 
 # Set log file in docker-utils
 $script:LogFile = $LogFile
-
-function Wait-ForKey {
-    param([string]$Message = "Press any key to continue...")
-    Write-Host ""
-    Write-Host $Message
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-}
 
 # Set console buffer for lots of output
 try {
@@ -294,5 +311,8 @@ if ($startNow -ne "n" -and $startNow -ne "N") {
 
 Write-Host ""
 Write-Log "Documentation: $InstallDir\README.md"
+if ($LogFile) {
+    Write-Log "Log file: $LogFile"
+}
 
-Wait-ForKey "Press any key to close this window..."
+Wait-ForKey "Press Enter to close this window..."

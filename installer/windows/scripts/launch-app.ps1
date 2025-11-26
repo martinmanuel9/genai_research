@@ -9,24 +9,39 @@ param(
 
 $ErrorActionPreference = "Continue"
 
-# Setup logging
-$LogDir = Join-Path $InstallDir "logs"
-if (-not (Test-Path $LogDir)) {
-    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+# Function to wait for user input (works in all PowerShell contexts)
+function Wait-ForKey {
+    param([string]$Message = "Press Enter to close this window...")
+    Write-Host ""
+    Write-Host $Message -ForegroundColor Yellow
+    Read-Host
 }
-$LogFile = Join-Path $LogDir "launch-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+# Setup logging - try install dir first, fallback to temp
+$LogDir = Join-Path $InstallDir "logs"
+$LogFile = $null
+
+try {
+    if (-not (Test-Path $LogDir)) {
+        New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+    }
+    $LogFile = Join-Path $LogDir "launch-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    Set-Content -Path $LogFile -Value "GenAI Research Launch Log - $(Get-Date)" -ErrorAction Stop
+} catch {
+    # Fallback to temp directory
+    $LogFile = Join-Path $env:TEMP "genai-launch-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    try {
+        Set-Content -Path $LogFile -Value "GenAI Research Launch Log - $(Get-Date)" -ErrorAction Stop
+    } catch {
+        $LogFile = $null
+    }
+}
 
 # Load shared utilities (interactive mode)
 . "$PSScriptRoot\docker-utils.ps1"
 
 # Set log file in docker-utils
 $script:LogFile = $LogFile
-
-function Wait-ForKey {
-    Write-Host ""
-    Write-Host "Press any key to close this window..."
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-}
 
 ###############################################################################
 # MAIN SCRIPT

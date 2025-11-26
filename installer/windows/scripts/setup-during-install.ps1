@@ -13,13 +13,44 @@ param(
 $ErrorActionPreference = "Continue"
 $ProgressPreference = "SilentlyContinue"
 
+# Global flag to track if we should wait for user at the end
+$script:WaitForUserAtEnd = $true
+
+# Function to wait for user input (works in all PowerShell contexts)
+function Wait-ForUserInput {
+    param([string]$Message = "Press Enter to continue...")
+    Write-Host ""
+    Write-Host $Message -ForegroundColor Yellow
+    # Use Read-Host which works in all contexts (unlike RawUI.ReadKey)
+    Read-Host
+}
+
 # Setup logging - save to installation directory logs folder
 $LogDir = Join-Path $InstallDir "logs"
-if (-not (Test-Path $LogDir)) {
-    New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
-}
-$LogFile = Join-Path $LogDir "install-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+$LogFile = $null
 $StartTime = Get-Date
+
+# Try to create log directory and file
+try {
+    if (-not (Test-Path $LogDir)) {
+        New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+    }
+    $LogFile = Join-Path $LogDir "install-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    # Test we can write to the log file
+    Set-Content -Path $LogFile -Value "GenAI Research Installation Log - $(Get-Date)" -ErrorAction Stop
+    Write-Host "[INFO] Log file created: $LogFile" -ForegroundColor Cyan
+} catch {
+    # Fallback to temp directory if we can't write to install dir
+    $LogDir = $env:TEMP
+    $LogFile = Join-Path $LogDir "genai-install-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+    try {
+        Set-Content -Path $LogFile -Value "GenAI Research Installation Log - $(Get-Date)" -ErrorAction Stop
+        Write-Host "[WARNING] Could not write to install directory, using temp: $LogFile" -ForegroundColor Yellow
+    } catch {
+        $LogFile = $null
+        Write-Host "[WARNING] Could not create log file, continuing without logging" -ForegroundColor Yellow
+    }
+}
 
 function Write-Log {
     param([string]$Message, [string]$Color = "White")
@@ -29,8 +60,10 @@ function Write-Log {
     # Write to console with color
     Write-Host $logMessage -ForegroundColor $Color
 
-    # Write to log file
-    Add-Content -Path $LogFile -Value $logMessage -ErrorAction SilentlyContinue
+    # Write to log file if available
+    if ($LogFile) {
+        Add-Content -Path $LogFile -Value $logMessage -ErrorAction SilentlyContinue
+    }
 }
 
 function Write-LogSuccess {
@@ -86,11 +119,10 @@ Write-Host "╚═════════════════════�
 Write-Host ""
 
 Write-Log "Install Directory: $InstallDir"
-Write-Log "Log File: $LogFile"
+if ($LogFile) {
+    Write-Log "Log File: $LogFile"
+}
 Write-Host ""
-
-# Clear previous log
-Set-Content -Path $LogFile -Value "GenAI Research Installation Log - $(Get-Date)" -ErrorAction SilentlyContinue
 
 ###############################################################################
 # STEP 1: Verify .env File
@@ -102,18 +134,14 @@ $envFile = Join-Path $InstallDir ".env"
 if (-not (Test-Path $envFile)) {
     Write-LogError ".env file not found at: $envFile"
     Write-LogError "Please ensure you provided the .env file path during installation"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
 $envContent = Get-Content $envFile -Raw
 if (-not $envContent -or $envContent.Trim().Length -eq 0) {
     Write-LogError ".env file is empty"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
@@ -142,9 +170,7 @@ if (-not $dockerRunning) {
     Write-Log "1. Start Docker Desktop from the Start Menu"
     Write-Log "2. Wait for Docker to fully start (whale icon in system tray)"
     Write-Log "3. Run 'First-Time Setup' from Start Menu"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
@@ -213,10 +239,8 @@ if ($baseExitCode -eq 0) {
 } else {
     Write-LogError "base-poetry-deps build FAILED (exit code: $baseExitCode)"
     Write-Host ""
-    Write-Log "Check the log file for details: $LogFile"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    if ($LogFile) { Write-Log "Check the log file for details: $LogFile" }
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
@@ -239,10 +263,8 @@ if ($appExitCode -eq 0) {
 } else {
     Write-LogError "Application build FAILED (exit code: $appExitCode)"
     Write-Host ""
-    Write-Log "Check the log file for details: $LogFile"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    if ($LogFile) { Write-Log "Check the log file for details: $LogFile" }
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
@@ -271,9 +293,7 @@ $upExitCode = $LASTEXITCODE
 
 if ($upExitCode -ne 0) {
     Write-LogError "Failed to start containers (exit code: $upExitCode)"
-    Write-Host ""
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+    Wait-ForUserInput "Press Enter to exit..."
     exit 1
 }
 
@@ -312,17 +332,12 @@ Write-Log "  • FastAPI:       http://localhost:9020" -Color White
 Write-Log "  • ChromaDB:      http://localhost:8000" -Color White
 Write-Host ""
 Write-Log "Use Start Menu shortcuts to manage the application."
-Write-Log "Log file saved to: $LogFile"
-Write-Host ""
-Write-Host "This window will close in 10 seconds..." -ForegroundColor Yellow
-Write-Host "(Or press any key to close now)"
-
-# Wait for 10 seconds or key press
-$waited = 0
-while ($waited -lt 100) {
-    if ([Console]::KeyAvailable) { break }
-    Start-Sleep -Milliseconds 100
-    $waited++
+if ($LogFile) {
+    Write-Log "Log file saved to: $LogFile"
 }
+Write-Host ""
+
+# ALWAYS wait for user input before closing
+Wait-ForUserInput "Press Enter to close this window..."
 
 exit 0
