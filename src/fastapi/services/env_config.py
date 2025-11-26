@@ -73,9 +73,9 @@ class EnvironmentConfig:
             return chroma_url
 
         if self.is_docker:
-            return 'http://chromadb:8000'
+            return 'http://chromadb:8001'
         else:
-            return 'http://localhost:8000'
+            return 'http://localhost:8001'
     
     def get_redis_url(self) -> str:
         """Get Redis URL for environment"""

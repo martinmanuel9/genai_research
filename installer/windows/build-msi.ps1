@@ -70,7 +70,13 @@ $requiredFiles = @(
     "README.md",
     "INSTALL.md",
     "poetry.lock",
-    "pyproject.toml"
+    "pyproject.toml",
+    "run.sh"
+)
+
+# Optional files (copy if they exist)
+$optionalFiles = @(
+    ".env"
 )
 
 foreach ($file in $requiredFiles) {
@@ -80,6 +86,17 @@ foreach ($file in $requiredFiles) {
         exit 1
     }
     Copy-Item $sourcePath $stagingDir
+}
+
+# Copy optional files if they exist
+foreach ($file in $optionalFiles) {
+    $sourcePath = Join-Path $ProjectRoot $file
+    if (Test-Path $sourcePath) {
+        Copy-Item $sourcePath $stagingDir
+        Write-Info "Copied optional file: $file"
+    } else {
+        Write-Host "[INFO] Optional file not found (will be created during install): $file" -ForegroundColor Yellow
+    }
 }
 
 # Copy directories

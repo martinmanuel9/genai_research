@@ -74,7 +74,7 @@ class Settings(BaseSettings):
 
     # ChromaDB Configuration
     chroma_host: str = "chromadb"
-    chroma_port: int = 8000
+    chroma_port: int = 8001
 
     # Redis Configuration
     redis_url: str = "redis://redis:6379/0"

@@ -38,7 +38,7 @@ class RAGService:
     def __init__(self):
         # Replace HTTP URL with direct client
         chroma_host = os.getenv("CHROMA_HOST", "chromadb")
-        chroma_port = int(os.getenv("CHROMA_PORT", "8000"))
+        chroma_port = int(os.getenv("CHROMA_PORT", "8001"))
 
         # Native ChromaDB client (replaces HTTP session)
         self.chroma_client = chromadb.HttpClient(

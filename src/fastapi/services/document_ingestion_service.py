@@ -79,7 +79,7 @@ _hf_model = None
 
 # ChromaDB client
 CHROMA_HOST = os.getenv("CHROMA_HOST", "chromadb")
-CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8000"))
+CHROMA_PORT = int(os.getenv("CHROMA_PORT", "8001"))
 
 chroma_client = chromadb.HttpClient(
     host=CHROMA_HOST,

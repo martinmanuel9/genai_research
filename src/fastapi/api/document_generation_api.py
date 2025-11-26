@@ -687,7 +687,7 @@ async def get_generated_documents():
     """Get list of all generated documents from vector store"""
     try:
         # Query the generated_documents collection
-        chroma_url = os.getenv("CHROMA_URL", "http://localhost:8000")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
         response = requests.get(
             f"{chroma_url}/documents",
             params={"collection_name": "generated_documents"},
@@ -747,7 +747,7 @@ async def export_testplan_word(
             raise HTTPException(status_code=400, detail="document_id is required")
 
         # Fetch documents from Chroma and find the one we need
-        chroma_url = os.getenv("CHROMA_URL", "http://localhost:8000")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
         resp = requests.get(f"{chroma_url}/documents", params={"collection_name": collection_name}, timeout=30)
         if not resp.ok:
             raise HTTPException(status_code=resp.status_code, detail=f"Failed to fetch collection: {resp.text}")
@@ -812,7 +812,7 @@ async def export_pipeline_word(
 async def delete_generated_document(document_id: str):
     """Delete a generated document from vector store"""
     try:
-        chroma_url = os.getenv("CHROMA_URL", "http://localhost:8000")
+        chroma_url = os.getenv("CHROMA_URL", "http://chromadb:8001")
 
         # Delete from ChromaDB
         payload = {

@@ -71,7 +71,7 @@ async def health_status(
     try:
         rag_ok = rag_service.test_connection()
         chroma_host = os.getenv("CHROMA_HOST", "chromadb")
-        chroma_port = os.getenv("CHROMA_PORT", "8000")
+        chroma_port = os.getenv("CHROMA_PORT", "8001")
         services["rag_service"] = {
             "status": "healthy" if rag_ok else "unhealthy",
             "chromadb_connection": f"{chroma_host}:{chroma_port}",
