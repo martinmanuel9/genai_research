@@ -223,7 +223,7 @@ Write-Info "Configured services:"
 Write-Host "  - FastAPI Backend: http://localhost:9020"
 Write-Host "  - Streamlit Web UI: http://localhost:8501"
 Write-Host "  - PostgreSQL: localhost:5432"
-Write-Host "  - ChromaDB: localhost:8000"
+Write-Host "  - ChromaDB: localhost:8001"
 Write-Host "  - Redis: localhost:6379"
 if ($ollamaInstalled) {
     Write-Host "  - Ollama: http://localhost:11434"

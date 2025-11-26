@@ -92,7 +92,7 @@ DB_PASSWORD=your_password
 
 # Service URLs (usually don't need to change)
 FASTAPI_URL=http://fastapi:9020
-CHROMA_URL=http://chromadb:8000
+CHROMA_URL=http://chromadb:8001
 REDIS_URL=redis://redis:6379/0
 
 # Ollama Configuration

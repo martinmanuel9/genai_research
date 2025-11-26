@@ -130,7 +130,7 @@ fi
 
 # Check required ports are available
 print_info "Checking if required ports are available..."
-REQUIRED_PORTS=(5432 6379 8000 8501 9020)
+REQUIRED_PORTS=(5432 6379 8001 8501 9020)
 PORT_CONFLICTS=0
 
 for port in "${REQUIRED_PORTS[@]}"; do
@@ -148,7 +148,7 @@ for port in "${REQUIRED_PORTS[@]}"; do
 done
 
 if [ "$PORT_CONFLICTS" -eq 0 ]; then
-    print_success "All required ports are available (5432, 6379, 8000, 8501, 9020)"
+    print_success "All required ports are available (5432, 6379, 8001, 8501, 9020)"
 else
     print_warning "$PORT_CONFLICTS required port(s) in use - installation may require port configuration"
     WARNINGS=$((WARNINGS + 1))

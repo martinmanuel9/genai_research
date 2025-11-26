@@ -226,7 +226,7 @@ sudo rm -rf /var/lib/dis-verification-genai
 - Check file permissions on installation directory
 
 **Port conflicts:**
-- Check if ports 5432, 6379, 8000, 8501, 9020 are available
+- Check if ports 5432, 6379, 8001, 8501, 9020 are available
 - Stop conflicting services
 - Modify port configuration in docker-compose.yml
 

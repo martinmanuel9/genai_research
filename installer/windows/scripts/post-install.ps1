@@ -294,7 +294,7 @@ if ($startNow -ne "n" -and $startNow -ne "N") {
     Write-Host "Services:" -ForegroundColor Yellow
     Write-Host "  - Streamlit UI:  http://localhost:8501"
     Write-Host "  - FastAPI:       http://localhost:9020"
-    Write-Host "  - ChromaDB:      http://localhost:8000"
+    Write-Host "  - ChromaDB:      http://localhost:8001"
     Write-Host ""
     Write-Log "Opening web interface..."
     Start-Process "http://localhost:8501"

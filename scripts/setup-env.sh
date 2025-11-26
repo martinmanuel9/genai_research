@@ -149,7 +149,7 @@ print_info "Configured services:"
 echo "  - FastAPI Backend: http://localhost:9020"
 echo "  - Streamlit Web UI: http://localhost:8501"
 echo "  - PostgreSQL: localhost:5432"
-echo "  - ChromaDB: localhost:8000"
+echo "  - ChromaDB: localhost:8001"
 echo "  - Redis: localhost:6379"
 if command -v ollama &> /dev/null; then
     echo "  - Ollama: http://localhost:11434"

@@ -45,7 +45,7 @@
     },
     "chromadb": {
       "name": "ChromaDB Vector Store",
-      "port": 8000,
+      "port": 8001,
       "required": true
     },
     "redis": {

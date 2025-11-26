@@ -105,7 +105,7 @@ if (Test-ContainersRunning) {
     Write-Host "Services:" -ForegroundColor Yellow
     Write-Host "  - Streamlit UI:  http://localhost:8501"
     Write-Host "  - FastAPI:       http://localhost:9020"
-    Write-Host "  - ChromaDB:      http://localhost:8000"
+    Write-Host "  - ChromaDB:      http://localhost:8001"
     Wait-ForKey
     exit 0
 }
@@ -126,7 +126,7 @@ Write-Host ""
 Write-Host "Services:" -ForegroundColor Yellow
 Write-Host "  - Streamlit UI:  http://localhost:8501"
 Write-Host "  - FastAPI:       http://localhost:9020"
-Write-Host "  - ChromaDB:      http://localhost:8000"
+Write-Host "  - ChromaDB:      http://localhost:8001"
 Write-Host ""
 Write-Log "Opening web interface in your browser..."
 Start-Process "http://localhost:8501"

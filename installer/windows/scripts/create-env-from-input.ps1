@@ -69,9 +69,9 @@ DB_NAME=rag_memory
 
 # Service URLs
 FASTAPI_URL=http://fastapi:9020
-CHROMA_URL=http://chromadb:8000
+CHROMA_URL=http://chromadb:8001
 CHROMA_HOST=chromadb
-CHROMA_PORT=8000
+CHROMA_PORT=8001
 REDIS_URL=redis://redis:6379/0
 REDIS_HOST=redis
 REDIS_PORT=6379

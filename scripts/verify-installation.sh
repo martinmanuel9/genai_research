@@ -199,7 +199,7 @@ fi
 
 # Check 8: Port accessibility
 print_header "Network Accessibility"
-ports=("8501:Streamlit UI" "9020:FastAPI" "8000:ChromaDB")
+ports=("8501:Streamlit UI" "9020:FastAPI" "8001:ChromaDB")
 
 for port_info in "${ports[@]}"; do
     port=$(echo "$port_info" | cut -d':' -f1)

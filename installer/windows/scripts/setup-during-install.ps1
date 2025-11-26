@@ -576,7 +576,7 @@ Write-Host ""
 Write-Log "Application URLs:" -Color Cyan
 Write-Log "  • Streamlit UI:  http://localhost:8501" -Color White
 Write-Log "  • FastAPI:       http://localhost:9020" -Color White
-Write-Log "  • ChromaDB:      http://localhost:8000" -Color White
+Write-Log "  • ChromaDB:      http://localhost:8001" -Color White
 Write-Host ""
 Write-Log "Use Start Menu shortcuts to manage the application."
 if ($LogFile) {
