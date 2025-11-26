@@ -53,8 +53,11 @@
     =========================================================================
     -->
 
-    <!-- Copy .env file using cmd.exe (runs quietly during install) -->
-    <CustomAction Id="SetCopyEnvFileCmd"
+    <!--
+    Copy .env file using cmd.exe (runs quietly during install)
+    For deferred WixQuietExec, the property name must match the CustomAction Id
+    -->
+    <CustomAction Id="CopyEnvFile_SetProperty"
                   Property="CopyEnvFile"
                   Value="&quot;[SystemFolder]cmd.exe&quot; /c copy /Y &quot;[ENV_FILE_PATH]&quot; &quot;[INSTALLFOLDER].env&quot;" />
 
@@ -84,7 +87,7 @@
 
     <InstallExecuteSequence>
       <!-- Copy .env file during installation -->
-      <Custom Action="SetCopyEnvFileCmd" Before="CopyEnvFile"><![CDATA[ENV_FILE_PATH <> "" AND NOT Installed]]></Custom>
+      <Custom Action="CopyEnvFile_SetProperty" Before="CopyEnvFile"><![CDATA[ENV_FILE_PATH <> "" AND NOT Installed]]></Custom>
       <Custom Action="CopyEnvFile" After="InstallFiles"><![CDATA[ENV_FILE_PATH <> "" AND NOT Installed]]></Custom>
     </InstallExecuteSequence>
 

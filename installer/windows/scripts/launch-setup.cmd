@@ -22,5 +22,17 @@ cd /d "%~dp0.."
 REM Run the PowerShell setup script
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0setup-during-install.ps1" -InstallDir "%~dp0.."
 
-REM The PowerShell script handles its own "Press Enter to continue" prompt
-REM This batch file will exit after PowerShell exits
+REM Capture the exit code
+set PS_EXIT_CODE=%ERRORLEVEL%
+
+REM Always pause at the end so user can see any errors
+echo.
+echo ============================================================================
+if %PS_EXIT_CODE% EQU 0 (
+    echo   Setup completed. You may close this window.
+) else (
+    echo   Setup encountered an error. Please review the messages above.
+)
+echo ============================================================================
+echo.
+pause
