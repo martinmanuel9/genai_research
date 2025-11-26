@@ -54,7 +54,7 @@
     -->
 
     <!--
-    Copy .env file using cmd.exe (runs quietly during install)
+    Copy .env file using cmd.exe copy command
     For deferred WixQuietExec, the property name must match the CustomAction Id
     -->
     <CustomAction Id="CopyEnvFile_SetProperty"

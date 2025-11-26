@@ -218,12 +218,64 @@ Write-LogStep "STEP 1/6: Verifying .env File"
 $envFile = Join-Path $InstallDir ".env"
 
 if (-not (Test-Path $envFile)) {
-    Write-LogError ".env file not found at: $envFile"
-    Write-LogError "Please ensure you provided the .env file path during installation"
-    Wait-ForUserInput "Press Enter to exit..."
-    exit 1
+    Write-LogWarning ".env file not found at: $envFile"
+    Write-Host ""
+    Write-Log "The .env file was not copied during installation."
+    Write-Log "This can happen if the source path contained spaces or special characters."
+    Write-Host ""
+
+    # Prompt user to provide the .env file path
+    $maxAttempts = 3
+    $attempt = 0
+    $envCopied = $false
+
+    while ($attempt -lt $maxAttempts -and -not $envCopied) {
+        $attempt++
+        Write-Host ""
+        Write-Log "Please enter the full path to your .env file:" -Color Yellow
+        Write-Host "  Example: C:\Users\YourName\Downloads\.env" -ForegroundColor Gray
+        Write-Host ""
+        $userEnvPath = Read-Host "  .env file path"
+
+        if ([string]::IsNullOrWhiteSpace($userEnvPath)) {
+            Write-LogError "No path entered. Attempt $attempt of $maxAttempts"
+            continue
+        }
+
+        # Remove any surrounding quotes the user might have added
+        $userEnvPath = $userEnvPath.Trim('"', "'", ' ')
+
+        if (Test-Path $userEnvPath) {
+            Write-Log "Found file: $userEnvPath"
+            Write-Log "Copying to installation directory..."
+
+            try {
+                Copy-Item -Path $userEnvPath -Destination $envFile -Force -ErrorAction Stop
+                Write-LogSuccess ".env file copied successfully!"
+                $envCopied = $true
+            } catch {
+                Write-LogError "Failed to copy file: $_"
+                Write-Log "Attempt $attempt of $maxAttempts"
+            }
+        } else {
+            Write-LogError "File not found: $userEnvPath"
+            Write-Log "Attempt $attempt of $maxAttempts"
+        }
+    }
+
+    if (-not $envCopied) {
+        Write-Host ""
+        Write-LogError "Could not obtain .env file after $maxAttempts attempts."
+        Write-Host ""
+        Write-Log "To fix this manually:"
+        Write-Log "1. Copy your .env file to: $envFile"
+        Write-Log "2. Run 'First-Time Setup' from the Start Menu"
+        Wait-ForUserInput "Press Enter to exit..."
+        exit 1
+    }
 }
 
+# Verify .env file content
 $envContent = Get-Content $envFile -Raw
 if (-not $envContent -or $envContent.Trim().Length -eq 0) {
     Write-LogError ".env file is empty"
@@ -320,7 +372,7 @@ if (-not $dockerRunning) {
 
             # Show progress
             $progress = [math]::Round(($waited / $maxWaitSeconds) * 100)
-            Write-Host "`r  Waiting... $waited seconds / $maxWaitSeconds seconds ($progress%)" -NoNewline
+            Write-Host "`r  Waiting... $waited seconds / $maxWaitSeconds seconds - ${progress} percent complete" -NoNewline
 
             # Check if Docker is now running
             try {
