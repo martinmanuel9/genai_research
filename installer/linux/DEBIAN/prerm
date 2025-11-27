@@ -6,12 +6,12 @@
 set -e
 
 # Stop and disable service
-if systemctl is-active --quiet dis-verification-genai; then
-    systemctl stop dis-verification-genai
+if systemctl is-active --quiet genai_research; then
+    systemctl stop genai_research
 fi
 
-if systemctl is-enabled --quiet dis-verification-genai; then
-    systemctl disable dis-verification-genai
+if systemctl is-enabled --quiet genai_research; then
+    systemctl disable genai_research
 fi
 
 exit 0

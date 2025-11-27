@@ -317,18 +317,18 @@ jobs:
           PKG_DIR="genai-research_${VERSION}_${ARCH}"
 
           # Create directory structure
-          mkdir -p "$PKG_DIR/opt/genai-research"
+          mkdir -p "$PKG_DIR/opt/genai_research"
           mkdir -p "$PKG_DIR/DEBIAN"
 
           # Copy application files
-          cp -r src "$PKG_DIR/opt/genai-research/"
-          cp -r scripts "$PKG_DIR/opt/genai-research/"
-          cp docker-compose.yml "$PKG_DIR/opt/genai-research/"
-          cp .env.template "$PKG_DIR/opt/genai-research/.env"
-          cp VERSION "$PKG_DIR/opt/genai-research/"
-          cp CHANGELOG.md "$PKG_DIR/opt/genai-research/"
-          cp README.md "$PKG_DIR/opt/genai-research/"
-          cp INSTALL.md "$PKG_DIR/opt/genai-research/"
+          cp -r src "$PKG_DIR/opt/genai_research/"
+          cp -r scripts "$PKG_DIR/opt/genai_research/"
+          cp docker-compose.yml "$PKG_DIR/opt/genai_research/"
+          cp .env.template "$PKG_DIR/opt/genai_research/.env"
+          cp VERSION "$PKG_DIR/opt/genai_research/"
+          cp CHANGELOG.md "$PKG_DIR/opt/genai_research/"
+          cp README.md "$PKG_DIR/opt/genai_research/"
+          cp INSTALL.md "$PKG_DIR/opt/genai_research/"
 
           # Copy DEBIAN control files
           cp installer/linux/DEBIAN/* "$PKG_DIR/DEBIAN/"
@@ -414,39 +414,39 @@ jobs:
           # No build needed - Python/Docker application
 
           %install
-          mkdir -p %{buildroot}/opt/genai-research
-          cp -r src %{buildroot}/opt/genai-research/
-          cp -r scripts %{buildroot}/opt/genai-research/
-          cp docker-compose.yml %{buildroot}/opt/genai-research/
-          cp .env.template %{buildroot}/opt/genai-research/.env
-          cp VERSION %{buildroot}/opt/genai-research/
-          cp CHANGELOG.md %{buildroot}/opt/genai-research/
-          cp README.md %{buildroot}/opt/genai-research/
-          cp INSTALL.md %{buildroot}/opt/genai-research/
+          mkdir -p %{buildroot}/opt/genai_research
+          cp -r src %{buildroot}/opt/genai_research/
+          cp -r scripts %{buildroot}/opt/genai_research/
+          cp docker-compose.yml %{buildroot}/opt/genai_research/
+          cp .env.template %{buildroot}/opt/genai_research/.env
+          cp VERSION %{buildroot}/opt/genai_research/
+          cp CHANGELOG.md %{buildroot}/opt/genai_research/
+          cp README.md %{buildroot}/opt/genai_research/
+          cp INSTALL.md %{buildroot}/opt/genai_research/
 
           %files
           %defattr(-,root,root,-)
-          /opt/genai-research
+          /opt/genai_research
 
           %post
           # Run post-installation script
-          if [ -f /opt/genai-research/scripts/rpm-postinst.sh ]; then
-              bash /opt/genai-research/scripts/rpm-postinst.sh
+          if [ -f /opt/genai_research/scripts/rpm-postinst.sh ]; then
+              bash /opt/genai_research/scripts/rpm-postinst.sh
           fi
 
           %preun
           # Stop and disable service before uninstall
-          if systemctl is-active --quiet genai-research; then
-              systemctl stop genai-research
+          if systemctl is-active --quiet genai_research; then
+              systemctl stop genai_research
           fi
-          if systemctl is-enabled --quiet genai-research; then
-              systemctl disable genai-research
+          if systemctl is-enabled --quiet genai_research; then
+              systemctl disable genai_research
           fi
 
           %postun
           # Remove systemd service file on purge
           if [ $1 -eq 0 ]; then
-              rm -f /etc/systemd/system/genai-research.service
+              rm -f /etc/systemd/system/genai_research.service
               systemctl daemon-reload
           fi
 

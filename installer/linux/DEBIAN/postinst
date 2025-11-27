@@ -5,9 +5,9 @@
 
 set -e
 
-INSTALL_DIR="/opt/dis-verification-genai"
-DATA_DIR="/var/lib/dis-verification-genai"
-SERVICE_USER="disverif"
+INSTALL_DIR="/opt/genai_research"
+DATA_DIR="/var/lib/genai_research"
+SERVICE_USER="genai"
 
 # Create service user if it doesn't exist
 if ! id "$SERVICE_USER" &>/dev/null; then
@@ -29,7 +29,7 @@ if getent group docker > /dev/null 2>&1; then
 fi
 
 # Create systemd service file
-cat > /etc/systemd/system/dis-verification-genai.service <<'EOF'
+cat > /etc/systemd/system/genai_research.service <<'EOF'
 [Unit]
 Description=GenAI Research
 Requires=docker.service
@@ -39,12 +39,12 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/opt/dis-verification-genai
+WorkingDirectory=/opt/genai_research
 User=root
 Group=root
 
 # Load environment
-EnvironmentFile=-/opt/dis-verification-genai/.env
+EnvironmentFile=-/opt/genai_research/.env
 
 # Start services
 ExecStart=/usr/bin/docker compose up -d
@@ -119,10 +119,10 @@ echo "  1. Verify installation (recommended):"
 echo "     $INSTALL_DIR/scripts/verify-installation.sh"
 echo ""
 echo "  2. Start the services:"
-echo "     sudo systemctl start dis-verification-genai"
+echo "     sudo systemctl start genai_research"
 echo ""
 echo "  3. Enable auto-start on boot (optional):"
-echo "     sudo systemctl enable dis-verification-genai"
+echo "     sudo systemctl enable genai_research"
 echo ""
 echo "  4. Access the web interface:"
 echo "     http://localhost:8501"
