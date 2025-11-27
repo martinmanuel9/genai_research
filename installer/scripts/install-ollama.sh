@@ -83,7 +83,7 @@ fi
 echo ""
 print_info "Next steps:"
 echo "  1. Pull recommended models:"
-echo "     /opt/dis-verification-genai/scripts/pull-ollama-models.sh auto"
+echo "     /opt/genai_research/scripts/pull-ollama-models.sh auto"
 echo ""
 echo "  2. Or manually pull specific models:"
 echo "     ollama pull llama3.1:8b"

@@ -20,7 +20,7 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 print_header() { echo -e "${CYAN}$1${NC}"; }
 
-INSTALL_DIR="${INSTALL_DIR:-/opt/dis-verification-genai}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/genai_research}"
 ENV_FILE="$INSTALL_DIR/.env"
 
 echo ""
@@ -157,7 +157,7 @@ fi
 
 echo ""
 print_info "To start the application:"
-echo "  sudo systemctl start dis-verification-genai"
+echo "  sudo systemctl start genai_research"
 echo ""
 print_info "To view logs:"
 echo "  cd $INSTALL_DIR && docker compose logs -f"

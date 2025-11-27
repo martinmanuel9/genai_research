@@ -155,21 +155,21 @@ fi
 
 # Check 6: System service
 print_header "Systemd Service"
-if systemctl list-unit-files | grep -q "dis-verification-genai.service"; then
+if systemctl list-unit-files | grep -q "genai_research.service"; then
     print_success "Systemd service installed"
 
-    if systemctl is-enabled --quiet dis-verification-genai 2>/dev/null; then
+    if systemctl is-enabled --quiet genai_research 2>/dev/null; then
         print_success "Service enabled (auto-start on boot)"
     else
         print_warning "Service not enabled for auto-start"
-        echo "  Run: sudo systemctl enable dis-verification-genai"
+        echo "  Run: sudo systemctl enable genai_research"
     fi
 
-    if systemctl is-active --quiet dis-verification-genai 2>/dev/null; then
+    if systemctl is-active --quiet genai_research 2>/dev/null; then
         print_success "Service running"
     else
         print_warning "Service not running"
-        echo "  Run: sudo systemctl start dis-verification-genai"
+        echo "  Run: sudo systemctl start genai_research"
     fi
 else
     print_error "Systemd service not installed"
@@ -178,7 +178,7 @@ fi
 
 # Check 7: Running containers (if service is active)
 print_header "Docker Containers"
-if systemctl is-active --quiet dis-verification-genai 2>/dev/null || docker ps --format "{{.Names}}" | grep -q "fastapi\|streamlit"; then
+if systemctl is-active --quiet genai_research 2>/dev/null || docker ps --format "{{.Names}}" | grep -q "fastapi\|streamlit"; then
     expected_containers=("fastapi" "streamlit" "postgres" "chromadb" "redis" "celery-worker")
     running_count=0
 
