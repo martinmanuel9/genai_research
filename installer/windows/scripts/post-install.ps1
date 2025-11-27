@@ -225,19 +225,43 @@ if (-not $ollamaInstalled) {
 
     if ($pullMode) {
         Write-Host ""
-        Write-Log "Running model pull script with mode: $pullMode"
 
-        $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
-        if (Test-Path $pullScript) {
-            & $pullScript -Mode $pullMode
-        } else {
-            Write-LogWarning "Pull script not found at: $pullScript"
-            Write-Log "Falling back to basic model pull..."
-            ollama pull snowflake-arctic-embed2
-            ollama pull llama3.2:3b
+        # Wait for Ollama service to be ready before pulling models
+        Write-Log "Waiting for Ollama service to be ready..."
+        $maxAttempts = 12
+        $ollamaReady = $false
+
+        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+            try {
+                $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+                $ollamaReady = $true
+                Write-LogSuccess "Ollama is ready!"
+                break
+            } catch {
+                Write-Host "  Waiting... (attempt $attempt of $maxAttempts)" -ForegroundColor DarkGray
+                Start-Sleep -Seconds 5
+            }
         }
 
-        Write-LogSuccess "Models downloaded"
+        if (-not $ollamaReady) {
+            Write-LogWarning "Ollama service is not responding after 60 seconds"
+            Write-Log "You can pull models manually later with:"
+            Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode" -ForegroundColor Yellow
+        } else {
+            Write-Log "Running model pull script with mode: $pullMode"
+
+            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
+            if (Test-Path $pullScript) {
+                & $pullScript -Mode $pullMode
+            } else {
+                Write-LogWarning "Pull script not found at: $pullScript"
+                Write-Log "Falling back to basic model pull..."
+                ollama pull snowflake-arctic-embed2
+                ollama pull llama3.2:3b
+            }
+
+            Write-LogSuccess "Models downloaded"
+        }
     }
 
     Write-LogSuccess "Step 3/4 Complete"

@@ -68,16 +68,42 @@ sudo systemctl daemon-reload
 sudo systemctl enable ollama
 sudo systemctl restart ollama
 
-# Wait for Ollama to start
-sleep 5
+# Wait for Ollama to start with retry logic
+print_info "Waiting for Ollama service to start (this may take up to 30 seconds)..."
+MAX_RETRIES=6
+RETRY_INTERVAL=5
+OLLAMA_READY=false
+
+for i in $(seq 1 $MAX_RETRIES); do
+    sleep $RETRY_INTERVAL
+    if curl -s http://localhost:11434/api/tags &> /dev/null; then
+        OLLAMA_READY=true
+        break
+    fi
+    print_info "Waiting for Ollama... attempt $i of $MAX_RETRIES"
+done
 
 # Verify installation
-if curl -s http://localhost:11434/api/tags &> /dev/null; then
+if [ "$OLLAMA_READY" = true ]; then
     print_success "Ollama installed and running successfully!"
 else
-    print_error "Ollama installation completed but service is not responding"
-    print_info "Try: sudo systemctl status ollama"
-    exit 1
+    print_warning "Ollama service is slow to start. Checking status..."
+
+    # Check if the service is at least active
+    if systemctl is-active --quiet ollama; then
+        print_info "Service is active but not yet responding. This is normal on first start."
+        print_info "The service may need more time to initialize GPU drivers."
+        print_info ""
+        print_info "Please wait a moment and then run:"
+        echo "     curl http://localhost:11434/api/tags"
+        print_info ""
+        print_info "Once Ollama is responding, pull models with:"
+        echo "     /opt/genai_research/scripts/pull-ollama-models.sh auto"
+    else
+        print_error "Ollama service failed to start"
+        print_info "Check logs with: sudo journalctl -u ollama -n 50"
+        exit 1
+    fi
 fi
 
 echo ""

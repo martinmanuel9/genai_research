@@ -170,14 +170,37 @@ if ($ollamaInstalled) {
     }
 
     if ($pullMode) {
-        $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
-        if (Test-Path $pullScript) {
-            Write-Info "Running model pull script with mode: $pullMode"
-            & $pullScript -Mode $pullMode
-            Write-Success "Models pulled successfully"
+        # Wait for Ollama service to be ready before pulling models
+        Write-Info "Waiting for Ollama service to be ready..."
+        $maxAttempts = 12
+        $ollamaReady = $false
+
+        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+            try {
+                $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+                $ollamaReady = $true
+                Write-Success "Ollama is ready!"
+                break
+            } catch {
+                Write-Host "  Waiting... (attempt $attempt of $maxAttempts)"
+                Start-Sleep -Seconds 5
+            }
+        }
+
+        if (-not $ollamaReady) {
+            Write-Warning "Ollama service is not responding after 60 seconds"
+            Write-Info "You can pull models manually later with:"
+            Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode"
         } else {
-            Write-Warning "Pull script not found at: $pullScript"
-            Write-Info "You can run it manually later from the scripts directory"
+            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
+            if (Test-Path $pullScript) {
+                Write-Info "Running model pull script with mode: $pullMode"
+                & $pullScript -Mode $pullMode
+                Write-Success "Models pulled successfully"
+            } else {
+                Write-Warning "Pull script not found at: $pullScript"
+                Write-Info "You can run it manually later from the scripts directory"
+            }
         }
     } else {
         Write-Info "Model pull skipped - you can run scripts\pull-ollama-models.ps1 later"
