@@ -88,7 +88,7 @@ if ! command -v ollama &> /dev/null; then
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Installing Ollama..."
-        "$INSTALL_DIR/scripts/install-ollama.sh"
+        "$INSTALL_DIR/scripts/install-ollama.sh" || echo "[WARNING] Ollama installation encountered issues. You can install it manually later."
 
         # Pull models if Ollama was installed successfully
         if command -v ollama &> /dev/null; then
@@ -96,7 +96,7 @@ if ! command -v ollama &> /dev/null; then
             echo ""
             if [[ $REPLY =~ ^[Yy]$ ]]; then
                 echo "Pulling models (this may take several minutes)..."
-                "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto
+                "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || echo "[WARNING] Model pull encountered issues. You can pull models manually later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
             fi
         fi
     fi
@@ -105,7 +105,7 @@ else
     read -p "Pull/update Ollama models now? (y/N): " -n 1 -r
     echo ""
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto
+        "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || echo "[WARNING] Model pull encountered issues. You can pull models manually later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
     fi
 fi
 
