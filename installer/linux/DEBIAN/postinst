@@ -46,8 +46,8 @@ Group=root
 # Load environment
 EnvironmentFile=-/opt/genai_research/.env
 
-# Start services
-ExecStart=/usr/bin/docker compose up -d
+# Build base image first, then start all services
+ExecStart=/bin/bash -c '/usr/bin/docker compose build base-poetry-deps && /usr/bin/docker compose up -d'
 
 # Stop services
 ExecStop=/usr/bin/docker compose down
