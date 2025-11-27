@@ -76,7 +76,7 @@ sudo rpm -i genai-research-{version}.x86_64.rpm
 
 ### Linux
 ```bash
-sudo /opt/genai-research/scripts/setup-env.sh
+sudo /opt/genai_research/scripts/setup-env.sh
 ```
 Follow the interactive prompts to configure API keys and settings.
 
@@ -98,8 +98,8 @@ cd "/Applications/GenAI Research.app/Contents/Resources"
 
 ### Linux
 ```bash
-sudo systemctl start genai-research
-sudo systemctl enable genai-research  # Auto-start on boot
+sudo systemctl start genai_research
+sudo systemctl enable genai_research  # Auto-start on boot
 ```
 
 ### macOS
@@ -122,8 +122,8 @@ For on-premises AI models (no internet required):
 
 ### Linux
 ```bash
-sudo /opt/genai-research/scripts/install-ollama.sh
-/opt/genai-research/scripts/pull-ollama-models.sh auto
+sudo /opt/genai_research/scripts/install-ollama.sh
+/opt/genai_research/scripts/pull-ollama-models.sh auto
 ```
 
 ### macOS
@@ -203,7 +203,7 @@ To check from command line:
 
 **Linux:**
 ```bash
-cat /opt/genai-research/VERSION
+cat /opt/genai_research/VERSION
 ```
 
 **Windows:**

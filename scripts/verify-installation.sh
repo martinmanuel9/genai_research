@@ -19,7 +19,7 @@ print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 print_error() { echo -e "${RED}[✗]${NC} $1"; }
 print_header() { echo -e "${BLUE}=== $1 ===${NC}"; }
 
-INSTALL_DIR="${INSTALL_DIR:-/opt/genai-research}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/genai_research}"
 ISSUES_FOUND=0
 
 echo ""

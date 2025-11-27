@@ -169,18 +169,18 @@ schtasks /create /tn "GenAI Research" /tr "docker compose -f 'C:\Program Files\G
 
 3. **Configure Environment**
    ```bash
-   sudo /opt/genai-research/scripts/setup-env.sh
+   sudo /opt/genai_research/scripts/setup-env.sh
    ```
 
 4. **Start Services**
    ```bash
-   sudo systemctl start genai-research
-   sudo systemctl status genai-research
+   sudo systemctl start genai_research
+   sudo systemctl status genai_research
    ```
 
 5. **Enable Auto-Start (Optional)**
    ```bash
-   sudo systemctl enable genai-research
+   sudo systemctl enable genai_research
    ```
 
 6. **Access Web Interface**
@@ -287,7 +287,7 @@ LANGSMITH_PROJECT=your-project-name
 
 **Linux:**
 ```bash
-sudo /opt/genai-research/scripts/install-ollama.sh
+sudo /opt/genai_research/scripts/install-ollama.sh
 ```
 
 **macOS:**
@@ -305,7 +305,7 @@ brew install ollama
 **Auto-detect GPU and pull optimal models:**
 ```bash
 # Linux/macOS
-/opt/genai-research/scripts/pull-ollama-models.sh auto
+/opt/genai_research/scripts/pull-ollama-models.sh auto
 
 # Windows
 cd "C:\Program Files\GenAI Research\scripts"
@@ -352,7 +352,7 @@ You should see 6 services running:
 
 **Linux:**
 ```bash
-cat /opt/genai-research/VERSION
+cat /opt/genai_research/VERSION
 ```
 
 **Windows:**
@@ -370,7 +370,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 1. **Stop Current Services**
    ```bash
    # Linux
-   sudo systemctl stop genai-research
+   sudo systemctl stop genai_research
 
    # Windows/macOS
    docker compose down
@@ -379,7 +379,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 2. **Backup Data (Recommended)**
    ```bash
    # Linux
-   sudo cp -r /var/lib/genai-research /var/lib/genai-research.backup
+   sudo cp -r /var/lib/genai_research /var/lib/genai_research.backup
 
    # Windows
    docker compose exec postgres pg_dump -U g3nA1-user rag_memory > backup.sql
@@ -396,7 +396,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 4. **Restart Services**
    ```bash
    # Linux
-   sudo systemctl start genai-research
+   sudo systemctl start genai_research
 
    # Windows/macOS
    docker compose up -d
@@ -429,8 +429,8 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 
 1. **Stop Services**
    ```bash
-   sudo systemctl stop genai-research
-   sudo systemctl disable genai-research
+   sudo systemctl stop genai_research
+   sudo systemctl disable genai_research
    ```
 
 2. **Uninstall Package**
@@ -443,7 +443,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
    ```
 
 3. **Remove Data (If Prompted)**
-   The uninstaller will ask if you want to remove data at `/var/lib/genai-research`
+   The uninstaller will ask if you want to remove data at `/var/lib/genai_research`
 
 ### macOS
 

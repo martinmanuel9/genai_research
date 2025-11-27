@@ -77,7 +77,7 @@ build_linux_deb() {
     mkdir -p "$BUILD_DIR"
 
     # Create package structure
-    mkdir -p "$BUILD_DIR/$PKG_DIR/opt/genai-research"
+    mkdir -p "$BUILD_DIR/$PKG_DIR/opt/genai_research"
     mkdir -p "$BUILD_DIR/$PKG_DIR/DEBIAN"
 
     # Copy application files
@@ -100,19 +100,19 @@ build_linux_deb() {
     done
 
     # Copy with verification
-    cp -r "$PROJECT_ROOT/src" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy src"; exit 1; }
-    cp -r "$PROJECT_ROOT/scripts" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy scripts"; exit 1; }
-    cp "$PROJECT_ROOT/docker-compose.yml" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy docker-compose.yml"; exit 1; }
-    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai-research/.env" || { print_error "Failed to copy .env.template"; exit 1; }
-    cp "$PROJECT_ROOT/VERSION" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy VERSION"; exit 1; }
-    cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy CHANGELOG.md"; exit 1; }
-    cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy README.md"; exit 1; }
-    cp "$PROJECT_ROOT/INSTALL.md" "$BUILD_DIR/$PKG_DIR/opt/genai-research/" || { print_error "Failed to copy INSTALL.md"; exit 1; }
+    cp -r "$PROJECT_ROOT/src" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy src"; exit 1; }
+    cp -r "$PROJECT_ROOT/scripts" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy scripts"; exit 1; }
+    cp "$PROJECT_ROOT/docker-compose.yml" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy docker-compose.yml"; exit 1; }
+    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env" || { print_error "Failed to copy .env.template"; exit 1; }
+    cp "$PROJECT_ROOT/VERSION" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy VERSION"; exit 1; }
+    cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy CHANGELOG.md"; exit 1; }
+    cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy README.md"; exit 1; }
+    cp "$PROJECT_ROOT/INSTALL.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy INSTALL.md"; exit 1; }
 
     # Verify all files were copied
     print_info "Verifying copied files..."
     for file in src scripts docker-compose.yml .env VERSION CHANGELOG.md README.md INSTALL.md; do
-        if [ ! -e "$BUILD_DIR/$PKG_DIR/opt/genai-research/$file" ]; then
+        if [ ! -e "$BUILD_DIR/$PKG_DIR/opt/genai_research/$file" ]; then
             print_error "Verification failed: $file was not copied"
             exit 1
         fi
@@ -130,7 +130,7 @@ build_linux_deb() {
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/postinst"
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/prerm"
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/postrm"
-    chmod +x "$BUILD_DIR/$PKG_DIR/opt/genai-research/scripts/"*.sh
+    chmod +x "$BUILD_DIR/$PKG_DIR/opt/genai_research/scripts/"*.sh
 
     # Build DEB package
     print_info "Building DEB package..."
@@ -186,39 +186,39 @@ verification capabilities using advanced AI models. Features include:
 # No build needed - Python/Docker application
 
 %install
-mkdir -p %{buildroot}/opt/genai-research
-cp -r $PROJECT_ROOT/src %{buildroot}/opt/genai-research/
-cp -r $PROJECT_ROOT/scripts %{buildroot}/opt/genai-research/
-cp $PROJECT_ROOT/docker-compose.yml %{buildroot}/opt/genai-research/
-cp $PROJECT_ROOT/.env.template %{buildroot}/opt/genai-research/.env
-cp $PROJECT_ROOT/VERSION %{buildroot}/opt/genai-research/
-cp $PROJECT_ROOT/CHANGELOG.md %{buildroot}/opt/genai-research/
-cp $PROJECT_ROOT/README.md %{buildroot}/opt/genai-research/
-cp $PROJECT_ROOT/INSTALL.md %{buildroot}/opt/genai-research/
+mkdir -p %{buildroot}/opt/genai_research
+cp -r $PROJECT_ROOT/src %{buildroot}/opt/genai_research/
+cp -r $PROJECT_ROOT/scripts %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/docker-compose.yml %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/.env.template %{buildroot}/opt/genai_research/.env
+cp $PROJECT_ROOT/VERSION %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/CHANGELOG.md %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/README.md %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/INSTALL.md %{buildroot}/opt/genai_research/
 
 %files
 %defattr(-,root,root,-)
-/opt/genai-research
+/opt/genai_research
 
 %post
 # Run post-installation script
-if [ -f /opt/genai-research/scripts/rpm-postinst.sh ]; then
-    bash /opt/genai-research/scripts/rpm-postinst.sh
+if [ -f /opt/genai_research/scripts/rpm-postinst.sh ]; then
+    bash /opt/genai_research/scripts/rpm-postinst.sh
 fi
 
 %preun
 # Stop and disable service before uninstall
-if systemctl is-active --quiet genai-research; then
-    systemctl stop genai-research
+if systemctl is-active --quiet genai_research; then
+    systemctl stop genai_research
 fi
-if systemctl is-enabled --quiet genai-research; then
-    systemctl disable genai-research
+if systemctl is-enabled --quiet genai_research; then
+    systemctl disable genai_research
 fi
 
 %postun
 # Remove systemd service file on purge
 if [ \$1 -eq 0 ]; then
-    rm -f /etc/systemd/system/genai-research.service
+    rm -f /etc/systemd/system/genai_research.service
     systemctl daemon-reload
 fi
 

@@ -66,12 +66,12 @@
   },
   "install_paths": {
     "windows": "C:\\Program Files\\GenAI Research",
-    "linux": "/opt/genai-research",
+    "linux": "/opt/genai_research",
     "macos": "/Applications/GenAI Research.app/Contents"
   },
   "data_paths": {
     "windows": "%PROGRAMDATA%\\GenAI Research",
-    "linux": "/var/lib/genai-research",
+    "linux": "/var/lib/genai_research",
     "macos": "~/Library/Application Support/GenAI Research"
   }
 }
