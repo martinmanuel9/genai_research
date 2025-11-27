@@ -84,19 +84,22 @@ echo ""
 
 # Helper function to wait for Ollama to be ready
 wait_for_ollama() {
-    echo "Waiting for Ollama service to be ready..."
-    local max_attempts=12
+    echo "Waiting for Ollama service to be ready (this may take up to 2 minutes)..."
+    local max_attempts=24
     local attempt=1
     while [ $attempt -le $max_attempts ]; do
         if curl -s http://localhost:11434/api/tags &> /dev/null; then
             echo "[SUCCESS] Ollama is ready!"
             return 0
         fi
-        echo "  Waiting... (attempt $attempt of $max_attempts)"
+        # Show progress every 5 attempts
+        if [ $((attempt % 5)) -eq 0 ]; then
+            echo "  Still waiting... ($((attempt * 5)) seconds elapsed)"
+        fi
         sleep 5
         attempt=$((attempt + 1))
     done
-    echo "[WARNING] Ollama service is not responding after 60 seconds"
+    echo "[WARNING] Ollama service is not responding after 2 minutes"
     return 1
 }
 

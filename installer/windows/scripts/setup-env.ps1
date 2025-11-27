@@ -170,9 +170,9 @@ if ($ollamaInstalled) {
     }
 
     if ($pullMode) {
-        # Wait for Ollama service to be ready before pulling models
-        Write-Info "Waiting for Ollama service to be ready..."
-        $maxAttempts = 12
+        # Wait for Ollama service to be ready before pulling models (GPU init can take 2+ minutes)
+        Write-Info "Waiting for Ollama service to be ready (this may take up to 2 minutes)..."
+        $maxAttempts = 24
         $ollamaReady = $false
 
         for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
@@ -182,13 +182,16 @@ if ($ollamaInstalled) {
                 Write-Success "Ollama is ready!"
                 break
             } catch {
-                Write-Host "  Waiting... (attempt $attempt of $maxAttempts)"
+                # Show progress every 5 attempts
+                if ($attempt % 5 -eq 0) {
+                    Write-Host "  Still waiting... ($($attempt * 5) seconds elapsed)"
+                }
                 Start-Sleep -Seconds 5
             }
         }
 
         if (-not $ollamaReady) {
-            Write-Warning "Ollama service is not responding after 60 seconds"
+            Write-Warning "Ollama service is not responding after 2 minutes"
             Write-Info "You can pull models manually later with:"
             Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode"
         } else {
