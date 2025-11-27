@@ -75,24 +75,44 @@ if command -v ollama &> /dev/null; then
     print_success "Ollama detected"
 
     # Check which models to auto-pull
-    print_info "Select models to auto-pull on startup:"
-    echo "  1) llama3.2:1b (lightweight, 1.3 GB)"
-    echo "  2) llama3.1:8b (recommended, 4.7 GB)"
-    echo "  3) None (configure manually later)"
-    read -p "Choice [1-3]: " MODEL_CHOICE
+    print_info "Select model configuration:"
+    echo "  1) Auto-detect (recommended) - Detects GPU and pulls optimal models"
+    echo "  2) Quick - Lightweight models only (~6.6 GB)"
+    echo "  3) Recommended - Production-ready models (~9 GB)"
+    echo "  4) Full - All models including 70B variants (~100+ GB)"
+    echo "  5) Vision only - Vision/multimodal models for image understanding (~14.5 GB)"
+    echo "  6) None (configure manually later)"
+    read -p "Choice [1-6]: " MODEL_CHOICE
 
     case $MODEL_CHOICE in
         1)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=llama3.2:1b/" "$ENV_FILE"
-            print_success "Configured to auto-pull llama3.2:1b"
+            print_info "Running auto-detection model pull..."
+            "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || print_warning "Model pull encountered issues"
+            print_success "Auto-detected models configured"
             ;;
         2)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=llama3.1:8b/" "$ENV_FILE"
-            print_success "Configured to auto-pull llama3.1:8b"
+            print_info "Pulling quick/lightweight models..."
+            "$INSTALL_DIR/scripts/pull-ollama-models.sh" quick || print_warning "Model pull encountered issues"
+            print_success "Quick models configured"
+            ;;
+        3)
+            print_info "Pulling recommended production models..."
+            "$INSTALL_DIR/scripts/pull-ollama-models.sh" recommended || print_warning "Model pull encountered issues"
+            print_success "Recommended models configured"
+            ;;
+        4)
+            print_info "Pulling full model set (this will take a while)..."
+            "$INSTALL_DIR/scripts/pull-ollama-models.sh" full || print_warning "Model pull encountered issues"
+            print_success "Full model set configured"
+            ;;
+        5)
+            print_info "Pulling vision/multimodal models..."
+            "$INSTALL_DIR/scripts/pull-ollama-models.sh" vision || print_warning "Model pull encountered issues"
+            print_success "Vision models configured"
             ;;
         *)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=/" "$ENV_FILE"
             print_info "No auto-pull configured"
+            print_info "You can pull models later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
             ;;
     esac
 else
