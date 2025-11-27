@@ -395,7 +395,7 @@ jobs:
           URL:            https://github.com/${{ github.repository }}
           Source0:        %{name}-%{version}.tar.gz
           Requires:       docker >= 24.0.0
-          BuildArch:      %{_rpm_arch}
+          BuildArch:      noarch
 
           %description
           GenAI Research provides comprehensive AI-powered research and
@@ -455,9 +455,8 @@ jobs:
           - Release %{version}
           SPECEOF
 
-          # Replace version and architecture placeholders
+          # Replace version placeholder
           sed -i "s/%{_version}/$VERSION/g" genai-research.spec
-          sed -i "s/%{_rpm_arch}/$RPM_ARCH/g" genai-research.spec
 
       - name: Build RPM package
         run: |
@@ -472,28 +471,22 @@ jobs:
           tar czf ~/rpmbuild/SOURCES/genai-research-$VERSION.tar.gz genai-research-$VERSION
           rm -rf genai-research-$VERSION
 
-          # Build RPM (noarch-like build for script/docker packages)
-          rpmbuild -ba ~/rpmbuild/SPECS/genai-research.spec --target $RPM_ARCH
+          # Build RPM (noarch since this is a script/docker package with no compiled binaries)
+          rpmbuild -ba ~/rpmbuild/SPECS/genai-research.spec
 
-          # Copy built RPM
-          find ~/rpmbuild/RPMS -name "*.rpm" -exec cp {} ./ \;
-
-      - name: Find and upload RPM
-        run: |
-          VERSION="${{ needs.prepare.outputs.version }}"
-          RPM_ARCH="${{ matrix.rpm_arch }}"
-          RPM_FILE=$(ls genai-research-$VERSION-*.${RPM_ARCH}.rpm | head -1)
-          echo "RPM_FILE=$RPM_FILE" >> $GITHUB_ENV
+          # Copy built RPM and rename to target architecture for distribution
+          NOARCH_RPM=$(find ~/rpmbuild/RPMS -name "*.noarch.rpm" | head -1)
+          cp "$NOARCH_RPM" "./genai-research-$VERSION.${RPM_ARCH}.rpm"
 
       - name: Upload Linux RPM Package
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="v$VERSION"
           RPM_ARCH="${{ matrix.rpm_arch }}"
-          RPM_FILE="${{ env.RPM_FILE }}"
+          RPM_FILE="genai-research-$VERSION.${RPM_ARCH}.rpm"
 
-          # Upload with clobber to replace if exists, rename to standard name
-          gh release upload "$TAG" "$RPM_FILE#genai-research-$VERSION.${RPM_ARCH}.rpm" -R ${{ github.repository }} --clobber
+          # Upload with clobber to replace if exists
+          gh release upload "$TAG" "$RPM_FILE" -R ${{ github.repository }} --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
