@@ -103,7 +103,13 @@ build_linux_deb() {
     cp -r "$PROJECT_ROOT/src" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy src"; exit 1; }
     cp -r "$PROJECT_ROOT/scripts" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy scripts"; exit 1; }
     cp "$PROJECT_ROOT/docker-compose.yml" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy docker-compose.yml"; exit 1; }
-    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env" || { print_error "Failed to copy .env.template"; exit 1; }
+    cp "$PROJECT_ROOT/Dockerfile.base" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy Dockerfile.base"; exit 1; }
+    cp "$PROJECT_ROOT/pyproject.toml" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy pyproject.toml"; exit 1; }
+    cp "$PROJECT_ROOT/poetry.lock" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy poetry.lock"; exit 1; }
+    cp "$PROJECT_ROOT/run" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy run"; exit 1; }
+    chmod +x "$BUILD_DIR/$PKG_DIR/opt/genai_research/run"
+    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env.template" || { print_error "Failed to copy .env.template"; exit 1; }
+    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env" || { print_error "Failed to copy .env"; exit 1; }
     cp "$PROJECT_ROOT/VERSION" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy VERSION"; exit 1; }
     cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy CHANGELOG.md"; exit 1; }
     cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy README.md"; exit 1; }
@@ -111,7 +117,7 @@ build_linux_deb() {
 
     # Verify all files were copied
     print_info "Verifying copied files..."
-    for file in src scripts docker-compose.yml .env VERSION CHANGELOG.md README.md INSTALL.md; do
+    for file in src scripts docker-compose.yml Dockerfile.base pyproject.toml poetry.lock run .env.template .env VERSION CHANGELOG.md README.md INSTALL.md; do
         if [ ! -e "$BUILD_DIR/$PKG_DIR/opt/genai_research/$file" ]; then
             print_error "Verification failed: $file was not copied"
             exit 1

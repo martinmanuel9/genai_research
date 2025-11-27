@@ -164,14 +164,15 @@ jobs:
           Copy-Item -Recurse installer/windows/scripts/* $stagingDir/scripts -Force
           Copy-Item docker-compose.yml $stagingDir
           Copy-Item Dockerfile.base $stagingDir
+          Copy-Item pyproject.toml $stagingDir
+          Copy-Item poetry.lock $stagingDir
+          Copy-Item run $stagingDir
           Copy-Item .env.template $stagingDir
           Copy-Item VERSION $stagingDir
           Copy-Item CHANGELOG.md $stagingDir
           Copy-Item README.md $stagingDir
           Copy-Item INSTALL.md $stagingDir
           Copy-Item LICENSE.rtf $stagingDir
-          Copy-Item poetry.lock $stagingDir
-          Copy-Item pyproject.toml $stagingDir
 
           Write-Host "Staging directory created with all files"
           Get-ChildItem -Path $stagingDir -Recurse | Select-Object -First 20
@@ -324,6 +325,11 @@ jobs:
           cp -r src "$PKG_DIR/opt/genai_research/"
           cp -r scripts "$PKG_DIR/opt/genai_research/"
           cp docker-compose.yml "$PKG_DIR/opt/genai_research/"
+          cp Dockerfile.base "$PKG_DIR/opt/genai_research/"
+          cp pyproject.toml "$PKG_DIR/opt/genai_research/"
+          cp poetry.lock "$PKG_DIR/opt/genai_research/"
+          cp run "$PKG_DIR/opt/genai_research/"
+          chmod +x "$PKG_DIR/opt/genai_research/run"
           cp .env.template "$PKG_DIR/opt/genai_research/.env.template"
           cp .env.template "$PKG_DIR/opt/genai_research/.env"
           cp VERSION "$PKG_DIR/opt/genai_research/"
@@ -419,6 +425,11 @@ jobs:
           cp -r src %{buildroot}/opt/genai_research/
           cp -r scripts %{buildroot}/opt/genai_research/
           cp docker-compose.yml %{buildroot}/opt/genai_research/
+          cp Dockerfile.base %{buildroot}/opt/genai_research/
+          cp pyproject.toml %{buildroot}/opt/genai_research/
+          cp poetry.lock %{buildroot}/opt/genai_research/
+          cp run %{buildroot}/opt/genai_research/
+          chmod +x %{buildroot}/opt/genai_research/run
           cp .env.template %{buildroot}/opt/genai_research/.env.template
           cp .env.template %{buildroot}/opt/genai_research/.env
           cp VERSION %{buildroot}/opt/genai_research/
@@ -469,7 +480,7 @@ jobs:
 
           # Create source tarball with proper directory structure
           mkdir -p genai-research-$VERSION
-          cp -r src scripts docker-compose.yml .env.template VERSION CHANGELOG.md README.md INSTALL.md genai-research-$VERSION/
+          cp -r src scripts docker-compose.yml Dockerfile.base pyproject.toml poetry.lock run .env.template VERSION CHANGELOG.md README.md INSTALL.md genai-research-$VERSION/
           tar czf ~/rpmbuild/SOURCES/genai-research-$VERSION.tar.gz genai-research-$VERSION
           rm -rf genai-research-$VERSION
 
@@ -522,10 +533,17 @@ jobs:
           cp -r src "build/$APP_NAME.app/Contents/Resources/"
           cp -r scripts "build/$APP_NAME.app/Contents/Resources/"
           cp docker-compose.yml "build/$APP_NAME.app/Contents/Resources/"
+          cp Dockerfile.base "build/$APP_NAME.app/Contents/Resources/"
+          cp pyproject.toml "build/$APP_NAME.app/Contents/Resources/"
+          cp poetry.lock "build/$APP_NAME.app/Contents/Resources/"
+          cp run "build/$APP_NAME.app/Contents/Resources/"
+          chmod +x "build/$APP_NAME.app/Contents/Resources/run"
+          cp .env.template "build/$APP_NAME.app/Contents/Resources/.env.template"
           cp .env.template "build/$APP_NAME.app/Contents/Resources/.env"
           cp VERSION "build/$APP_NAME.app/Contents/Resources/"
           cp CHANGELOG.md "build/$APP_NAME.app/Contents/Resources/"
           cp README.md "build/$APP_NAME.app/Contents/Resources/"
+          cp INSTALL.md "build/$APP_NAME.app/Contents/Resources/"
 
           # Create Info.plist with architecture info
           cat > "build/$APP_NAME.app/Contents/Info.plist" <<EOF
