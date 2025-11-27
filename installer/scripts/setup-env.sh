@@ -74,27 +74,37 @@ echo ""
 if command -v ollama &> /dev/null; then
     print_success "Ollama detected"
 
-    # Check which models to auto-pull
-    print_info "Select models to auto-pull on startup:"
-    echo "  1) llama3.2:1b (lightweight, 1.3 GB)"
-    echo "  2) llama3.1:8b (recommended, 4.7 GB)"
-    echo "  3) None (configure manually later)"
-    read -p "Choice [1-3]: " MODEL_CHOICE
+    print_info "Would you like to pull models now?"
+    echo "  1) Auto   - Auto-detect GPU and pull appropriate models"
+    echo "  2) Quick  - Lightweight models only (~6.6 GB)"
+    echo "  3) Recommended - Production-ready models (~9 GB)"
+    echo "  4) Vision - Vision/multimodal models only (~11.5 GB)"
+    echo "  5) Skip   - Configure manually later"
+    read -p "Choice [1-5]: " MODEL_CHOICE
 
+    PULL_MODE=""
     case $MODEL_CHOICE in
-        1)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=llama3.2:1b/" "$ENV_FILE"
-            print_success "Configured to auto-pull llama3.2:1b"
-            ;;
-        2)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=llama3.1:8b/" "$ENV_FILE"
-            print_success "Configured to auto-pull llama3.1:8b"
-            ;;
-        *)
-            sed -i "s/^OLLAMA_MODELS=.*/OLLAMA_MODELS=/" "$ENV_FILE"
-            print_info "No auto-pull configured"
-            ;;
+        1) PULL_MODE="auto" ;;
+        2) PULL_MODE="quick" ;;
+        3) PULL_MODE="recommended" ;;
+        4) PULL_MODE="vision" ;;
+        5) PULL_MODE="" ;;
+        *) PULL_MODE="" ;;
     esac
+
+    if [ -n "$PULL_MODE" ]; then
+        PULL_SCRIPT="$INSTALL_DIR/scripts/pull-ollama-models.sh"
+        if [ -f "$PULL_SCRIPT" ]; then
+            print_info "Running model pull script with mode: $PULL_MODE"
+            "$PULL_SCRIPT" "$PULL_MODE"
+            print_success "Models pulled successfully"
+        else
+            print_warning "Pull script not found at: $PULL_SCRIPT"
+            print_info "You can run it manually later from the scripts directory"
+        fi
+    else
+        print_info "Model pull skipped - you can run scripts/pull-ollama-models.sh later"
+    fi
 else
     print_warning "Ollama not installed (local models will not be available)"
     print_info "Install with: $INSTALL_DIR/scripts/install-ollama.sh"

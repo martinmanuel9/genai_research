@@ -146,7 +146,7 @@ Write-Host ""
 ###############################################################################
 # STEP 0: Verify Installation Directory Contents
 ###############################################################################
-Write-LogStep "STEP 0/6: Verifying Installation Directory"
+Write-LogStep "STEP 0/7: Verifying Installation Directory"
 
 Write-Log "Checking installation directory: $InstallDir"
 
@@ -213,7 +213,7 @@ Write-LogSuccess "All critical files verified"
 ###############################################################################
 # STEP 1: Verify .env File
 ###############################################################################
-Write-LogStep "STEP 1/6: Verifying .env File"
+Write-LogStep "STEP 1/7: Verifying .env File"
 
 $envFile = Join-Path $InstallDir ".env"
 
@@ -289,7 +289,7 @@ Write-LogSuccess ".env file verified - $lineCount lines"
 ###############################################################################
 # STEP 2: Verify Docker
 ###############################################################################
-Write-LogStep "STEP 2/6: Checking Docker Desktop"
+Write-LogStep "STEP 2/7: Checking Docker Desktop"
 
 # First, check if Docker is installed
 Write-Log "Checking if Docker Desktop is installed..."
@@ -418,7 +418,7 @@ Write-Log "Docker version: $dockerVersion"
 ###############################################################################
 # STEP 3: System Detection
 ###############################################################################
-Write-LogStep "STEP 3/6: Detecting System Hardware"
+Write-LogStep "STEP 3/7: Detecting System Hardware"
 
 try {
     $gpus = Get-WmiObject Win32_VideoController
@@ -443,9 +443,127 @@ try {
 Write-LogSuccess "System detection complete"
 
 ###############################################################################
-# STEP 4: Build Docker Images
+# STEP 4: Ollama Setup (Optional)
 ###############################################################################
-Write-LogStep "STEP 4/6: Building Docker Images"
+Write-LogStep "STEP 4/7: Ollama Setup (Optional)"
+
+$ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
+
+if (-not $ollamaInstalled) {
+    Write-LogWarning "Ollama is not installed"
+    Write-Log "Ollama provides local LLM support for privacy and cost savings"
+    Write-Host ""
+    Write-Host "Would you like to install Ollama now? (Y/n): " -ForegroundColor Yellow -NoNewline
+    $installOllama = Read-Host
+
+    if ($installOllama -ne "n" -and $installOllama -ne "N") {
+        Write-Log "Opening Ollama download page..."
+        Start-Process "https://ollama.com/download/windows"
+        Write-Host ""
+        Write-Log "Please install Ollama from the browser window that just opened." -Color Yellow
+        Write-Log "After installation completes, press Enter to continue..." -Color Yellow
+        Write-Host ""
+        Read-Host "Press Enter after Ollama is installed"
+
+        # Check if Ollama is now installed
+        $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
+        if ($ollamaInstalled) {
+            Write-LogSuccess "Ollama installation detected!"
+        } else {
+            Write-LogWarning "Ollama not detected yet - it may require a system restart"
+            Write-Log "After restarting, use Start Menu > GenAI Research > Download Models"
+        }
+    }
+}
+
+# Now prompt for model selection (whether Ollama was just installed or already existed)
+if ($ollamaInstalled) {
+    Write-LogSuccess "Ollama is installed"
+
+    # Check if Ollama service is running
+    $ollamaRunning = $false
+    try {
+        $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+        $ollamaRunning = $true
+    } catch {
+        Write-Log "Starting Ollama service..."
+        Start-Process "ollama" -ArgumentList "serve" -WindowStyle Hidden
+        Start-Sleep -Seconds 5
+        try {
+            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+            $ollamaRunning = $true
+        } catch {
+            Write-LogWarning "Could not start Ollama service - it may need a system restart"
+        }
+    }
+
+    if ($ollamaRunning) {
+        Write-LogSuccess "Ollama service is running"
+    }
+
+    # Always show model selection menu
+    Write-Host ""
+    Write-Host "Model download options:" -ForegroundColor Yellow
+    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
+    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
+    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
+    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
+    Write-Host "  5) Full   - All models including 70B variants (100+ GB)"
+    Write-Host "  6) Skip   - Download models later"
+    Write-Host ""
+    Write-Host "Select option [1-6] (Enter for Auto): " -ForegroundColor Yellow -NoNewline
+    $modelChoice = Read-Host
+
+    $pullMode = switch ($modelChoice.Trim()) {
+        "1" { "auto" }
+        "2" { "quick" }
+        "3" { "recommended" }
+        "4" { "vision" }
+        "5" { "full" }
+        "6" { "" }
+        "" { "auto" }
+        default { "auto" }
+    }
+
+    if ($pullMode) {
+        if ($ollamaRunning) {
+            Write-Host ""
+            Write-Log "Pulling models with mode: $pullMode" -Color Cyan
+            Write-Log "This may take several minutes depending on your internet connection..."
+            Write-Host ""
+
+            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
+            if (Test-Path $pullScript) {
+                & $pullScript -Mode $pullMode
+                Write-LogSuccess "Model pull complete"
+            } else {
+                Write-LogWarning "Pull script not found at: $pullScript"
+                Write-Log "You can pull models manually later using: ollama pull <model-name>"
+            }
+        } else {
+            Write-LogWarning "Ollama service is not running - cannot pull models now"
+            Write-Log "After restarting your computer, use:"
+            Write-Log "  Start Menu > GenAI Research > Download Models"
+        }
+    } else {
+        Write-Log "Model download skipped"
+        Write-Log "You can download models later from:"
+        Write-Log "  Start Menu > GenAI Research > Download Models"
+    }
+} else {
+    Write-Log "Ollama not installed - skipping model configuration"
+    Write-Log "To set up local AI models later:"
+    Write-Log "  1. Download Ollama from: https://ollama.com/download/windows"
+    Write-Log "  2. Install and restart your computer"
+    Write-Log "  3. Use Start Menu > GenAI Research > Download Models"
+}
+
+Write-LogSuccess "Step 4/7 Complete"
+
+###############################################################################
+# STEP 5: Build Docker Images
+###############################################################################
+Write-LogStep "STEP 5/7: Building Docker Images"
 
 Set-Location $InstallDir
 
@@ -514,9 +632,9 @@ Write-Log "Built images:"
 $images | ForEach-Object { Write-Log "  - $_" }
 
 ###############################################################################
-# STEP 5: Start Services
+# STEP 6: Start Services
 ###############################################################################
-Write-LogStep "STEP 5/6: Starting Application Services"
+Write-LogStep "STEP 6/7: Starting Application Services"
 
 Write-Log "Starting Docker containers..."
 
@@ -546,9 +664,9 @@ $running | ForEach-Object { Write-Log "  $_" }
 $runningCount = (docker compose ps --status running --format "{{.Name}}" 2>&1 | Measure-Object -Line).Lines
 
 ###############################################################################
-# STEP 6: Verify Services
+# STEP 7: Verify Services
 ###############################################################################
-Write-LogStep "STEP 6/6: Verifying Services"
+Write-LogStep "STEP 7/7: Verifying Services"
 
 if ($runningCount -gt 0) {
     Write-LogSuccess "$runningCount containers running"

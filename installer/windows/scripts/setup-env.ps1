@@ -152,26 +152,35 @@ $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
 if ($ollamaInstalled) {
     Write-Success "Ollama detected"
 
-    # Check which models to auto-pull
-    Write-Info "Select models to auto-pull on startup:"
-    Write-Host "  1) llama3.2:1b (lightweight, 1.3 GB)"
-    Write-Host "  2) llama3.1:8b (recommended, 4.7 GB)"
-    Write-Host "  3) None (configure manually later)"
-    $modelChoice = Read-Host "Choice [1-3]"
+    Write-Info "Would you like to pull models now?"
+    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
+    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
+    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
+    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
+    Write-Host "  5) Skip   - Configure manually later"
+    $modelChoice = Read-Host "Choice [1-5]"
 
-    switch ($modelChoice) {
-        "1" {
-            (Get-Content $EnvFile) -replace '^OLLAMA_MODELS=.*', 'OLLAMA_MODELS=llama3.2:1b' | Set-Content $EnvFile
-            Write-Success "Configured to auto-pull llama3.2:1b"
+    $pullMode = switch ($modelChoice) {
+        "1" { "auto" }
+        "2" { "quick" }
+        "3" { "recommended" }
+        "4" { "vision" }
+        "5" { "" }
+        default { "" }
+    }
+
+    if ($pullMode) {
+        $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
+        if (Test-Path $pullScript) {
+            Write-Info "Running model pull script with mode: $pullMode"
+            & $pullScript -Mode $pullMode
+            Write-Success "Models pulled successfully"
+        } else {
+            Write-Warning "Pull script not found at: $pullScript"
+            Write-Info "You can run it manually later from the scripts directory"
         }
-        "2" {
-            (Get-Content $EnvFile) -replace '^OLLAMA_MODELS=.*', 'OLLAMA_MODELS=llama3.1:8b' | Set-Content $EnvFile
-            Write-Success "Configured to auto-pull llama3.1:8b"
-        }
-        default {
-            (Get-Content $EnvFile) -replace '^OLLAMA_MODELS=.*', 'OLLAMA_MODELS=' | Set-Content $EnvFile
-            Write-Info "No auto-pull configured"
-        }
+    } else {
+        Write-Info "Model pull skipped - you can run scripts\pull-ollama-models.ps1 later"
     }
 } else {
     Write-Warning "Ollama not installed (local models will not be available)"

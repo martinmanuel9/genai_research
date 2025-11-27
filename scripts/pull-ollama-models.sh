@@ -9,9 +9,10 @@
 # - Meta (California)
 # - Microsoft (Washington)
 # - Snowflake (Montana)
+# - IBM (New York) - Granite models
 #
 # Usage:
-#   ./scripts/pull-ollama-models.sh [auto|quick|recommended|full|embeddings]
+#   ./scripts/pull-ollama-models.sh [auto|quick|recommended|full|embeddings|vision]
 #
 # Options:
 #   auto         - Auto-detect GPU and pull appropriate models [DEFAULT]
@@ -19,6 +20,7 @@
 #   recommended  - Pull production-ready models (9 GB total)
 #   full         - Pull all available models including 70B variants (90+ GB)
 #   embeddings   - Pull only embedding models for RAG
+#   vision       - Pull vision/multimodal models for image understanding
 ###############################################################################
 
 set -e  # Exit on error
@@ -136,8 +138,8 @@ recommend_models() {
     if [ "$gpu_type" = "none" ]; then
         print_warning "No GPU detected - CPU-only mode"
         echo "  Recommended: Lightweight models optimized for CPU inference"
-        echo "  Models: llama3.2:1b, llama3.2:3b, phi3:mini"
-        echo "  Total Size: ~5.6 GB"
+        echo "  Models: llama3.2:1b, llama3.2:3b, phi3:mini, granite3.2-vision:2b"
+        echo "  Total Size: ~9.1 GB"
         echo ""
         return 1  # CPU-only tier
     elif [ "$gpu_type" = "nvidia" ]; then
@@ -164,35 +166,36 @@ recommend_models() {
     if [ "$vram_gb" -eq 0 ]; then
         # GPU detected but VRAM unknown (virtual GPU or detection failed)
         print_info "VRAM information unavailable - Recommending balanced models"
-        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2"
-        echo "  Total Size: ~10.7 GB"
+        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b"
+        echo "  Total Size: ~14.2 GB"
         echo ""
         echo "  💡 Tip: You can override this by running:"
         echo "     ./scripts/pull-ollama-models.sh quick      # For lightweight models"
         echo "     ./scripts/pull-ollama-models.sh recommended # For production models"
+        echo "     ./scripts/pull-ollama-models.sh vision      # For vision models only"
         echo ""
         return 2  # Balanced tier (safe default for unknown GPU)
     elif [ "$vram_gb" -lt 8 ]; then
         print_warning "Limited VRAM (< 8 GB) - Recommending lightweight models"
-        echo "  Models: llama3.2:3b, phi3:mini, snowflake-arctic-embed2"
-        echo "  Total Size: ~6.0 GB"
+        echo "  Models: llama3.2:3b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b"
+        echo "  Total Size: ~9.5 GB"
         echo ""
         return 1  # Lightweight tier
     elif [ "$vram_gb" -lt 16 ]; then
         print_success "Moderate VRAM (8-16 GB) - Recommending balanced models"
-        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2"
-        echo "  Total Size: ~10.7 GB"
+        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b, llava2:7b"
+        echo "  Total Size: ~18.7 GB"
         echo ""
         return 2  # Balanced tier
     elif [ "$vram_gb" -lt 40 ]; then
         print_success "High VRAM (16-40 GB) - Recommending powerful models"
-        echo "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2"
-        echo "  Total Size: ~19.3 GB"
+        echo "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2, llava2:7b, llava-llama3:13b"
+        echo "  Total Size: ~31.8 GB"
         echo ""
         return 3  # Powerful tier
     else
         print_success "Enterprise VRAM (40+ GB) - Can run largest models"
-        echo "  Models: All models including 70B variants available"
+        echo "  Models: All models including 70B variants and all vision models"
         echo "  Note: 70B models are optional due to size (40 GB each)"
         echo ""
         return 4  # Enterprise tier
@@ -215,6 +218,8 @@ pull_auto_models() {
             pull_model "llama3.2:3b" "Meta's balanced small model (2 GB)"
             pull_model "phi3:mini" "Microsoft's efficient model (2.3 GB)"
             pull_model "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
+            # Vision model for low VRAM
+            pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
             ;;
         2)  # 8-16 GB VRAM
             print_info "Pulling BALANCED models for moderate GPU (8-16 GB VRAM)"
@@ -223,6 +228,9 @@ pull_auto_models() {
             pull_model "llama3.1:8b" "Meta's powerful 8B model (4.7 GB)"
             pull_model "phi3:mini" "Microsoft's efficient model (2.3 GB)"
             pull_model "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
+            # Vision models for moderate VRAM
+            pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
+            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
             ;;
         3)  # 16-40 GB VRAM
             print_info "Pulling POWERFUL models for high-end GPU (16-40 GB VRAM)"
@@ -232,6 +240,9 @@ pull_auto_models() {
             pull_model "phi3:mini" "Microsoft Phi-3 Mini (2.3 GB)"
             pull_model "phi3:medium" "Microsoft Phi-3 Medium (7.9 GB)"
             pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
+            # Vision models for high VRAM
+            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
+            pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
             ;;
         4)  # 40+ GB VRAM
             print_info "Pulling ENTERPRISE models for high-end GPU (40+ GB VRAM)"
@@ -256,6 +267,10 @@ pull_auto_models() {
                 pull_model "phi3:medium" "Microsoft Phi-3 Medium (7.9 GB)"
                 pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
             fi
+            # All vision models for enterprise
+            pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
+            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
+            pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
             ;;
     esac
 }
@@ -306,8 +321,8 @@ case "$MODE" in
         ;;
 
     full)
-        print_warning "Pulling ALL models including 70B variants (90+ GB total)"
-        print_warning "This will take a long time and requires ~100 GB disk space"
+        print_warning "Pulling ALL models including 70B variants (100+ GB total)"
+        print_warning "This will take a long time and requires ~120 GB disk space"
         read -p "Continue? (y/N) " -n 1 -r
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -335,6 +350,11 @@ case "$MODE" in
         # Snowflake Embeddings
         pull_model "snowflake-arctic-embed" "Snowflake Arctic Embed (1 GB)"
         pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
+
+        # Vision/Multimodal Models
+        pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B (1.5 GB)"
+        pull_model "llava:7b" "LLaVA 7B - vision-language (4.5 GB)"
+        pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
         ;;
 
     embeddings)
@@ -345,16 +365,26 @@ case "$MODE" in
         pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
         ;;
 
+    vision)
+        print_info "Pulling VISION/MULTIMODAL models (for image understanding)"
+        echo ""
+
+        pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B - lightweight (1.5 GB)"
+        pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
+        pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+        ;;
+
     *)
         print_error "Invalid mode: $MODE"
         echo ""
-        echo "Usage: $0 [auto|quick|recommended|full|embeddings]"
+        echo "Usage: $0 [auto|quick|recommended|full|embeddings|vision]"
         echo ""
         echo "  auto         - Auto-detect GPU and pull appropriate models [DEFAULT]"
         echo "  quick        - Pull only the fastest models (6.6 GB total)"
         echo "  recommended  - Pull production-ready models (9 GB total)"
-        echo "  full         - Pull all available models including 70B variants (90+ GB)"
+        echo "  full         - Pull all available models including 70B variants (100+ GB)"
         echo "  embeddings   - Pull only embedding models for RAG"
+        echo "  vision       - Pull vision/multimodal models for image understanding"
         exit 1
         ;;
 esac

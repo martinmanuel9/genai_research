@@ -200,35 +200,42 @@ if (-not $ollamaInstalled) {
 } else {
     Write-LogSuccess "Ollama is installed"
 
-    $recommendedModel = Get-RecommendedModel
-
     Write-Host ""
-    Write-Host "Available models:" -ForegroundColor Yellow
-    Write-Host "  1) llama3.2:1b  - Lightweight (1.3 GB) - CPU-friendly"
-    Write-Host "  2) llama3.2:3b  - Medium (2.0 GB) - Good balance"
-    Write-Host "  3) llama3.1:8b  - Large (4.7 GB) - Best quality (GPU recommended)"
-    Write-Host "  4) Skip model download"
+    Write-Host "Model download options:" -ForegroundColor Yellow
+    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
+    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
+    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
+    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
+    Write-Host "  5) Full   - All models including 70B variants (100+ GB)"
+    Write-Host "  6) Skip model download"
     Write-Host ""
 
-    $modelChoice = Read-Host "Select model [1-4] (Enter for recommended: $recommendedModel)"
+    $modelChoice = Read-Host "Select option [1-6] (Enter for Auto)"
 
-    $selectedModel = switch ($modelChoice.Trim()) {
-        "1" { "llama3.2:1b" }
-        "2" { "llama3.2:3b" }
-        "3" { "llama3.1:8b" }
-        "4" { "" }
-        "" { $recommendedModel }
-        default { $recommendedModel }
+    $pullMode = switch ($modelChoice.Trim()) {
+        "1" { "auto" }
+        "2" { "quick" }
+        "3" { "recommended" }
+        "4" { "vision" }
+        "5" { "full" }
+        "6" { "" }
+        "" { "auto" }
+        default { "auto" }
     }
 
-    if ($selectedModel) {
+    if ($pullMode) {
         Write-Host ""
-        Write-Log "Downloading embedding model: snowflake-arctic-embed2"
-        ollama pull snowflake-arctic-embed2
+        Write-Log "Running model pull script with mode: $pullMode"
 
-        Write-Host ""
-        Write-Log "Downloading LLM model: $selectedModel"
-        ollama pull $selectedModel
+        $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
+        if (Test-Path $pullScript) {
+            & $pullScript -Mode $pullMode
+        } else {
+            Write-LogWarning "Pull script not found at: $pullScript"
+            Write-Log "Falling back to basic model pull..."
+            ollama pull snowflake-arctic-embed2
+            ollama pull llama3.2:3b
+        }
 
         Write-LogSuccess "Models downloaded"
     }

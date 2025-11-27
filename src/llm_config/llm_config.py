@@ -208,31 +208,27 @@ MODEL_REGISTRY: Dict[str, ModelConfig] = {
         provider="ollama",
         max_context_tokens=128000,
     ),
-    # "phi3:medium": ModelConfig(
-    #     model_id="phi3:medium",
-    #     display_name="Phi-3 Medium (Local)",
-    #     description="Microsoft's medium model - Strong performance for enterprise use (7.9GB disk)",
-    #     provider="ollama",
-    #     max_context_tokens=128000,
-    # ),
-
-    # Snowflake (US - Montana) - Arctic Embed Series
-    # NOTE: Arctic Embed models are EMBEDDING-ONLY models and should NOT be used for text generation
-    # They are kept commented out to prevent accidental selection for chat/generation tasks
-    # "snowflake-arctic-embed": ModelConfig(
-    #     model_id="snowflake-arctic-embed",
-    #     display_name="Snowflake Arctic Embed (Local)",
-    #     description="Snowflake's embedding model - Optimized for RAG and semantic search",
-    #     provider="ollama",
-    #     max_context_tokens=512,
-    # ),
-    # "snowflake-arctic-embed2": ModelConfig(
-    #     model_id="snowflake-arctic-embed2",
-    #     display_name="Snowflake Arctic Embed 2.0 (Local)",
-    #     description="Snowflake's frontier embedding model - Multilingual support with superior English performance",
-    #     provider="ollama",
-    #     max_context_tokens=8192,
-    # ),
+    "llava2:7b": ModelConfig(
+        model_id="llava2:7b",
+        display_name="LLaVA 2 7B (Local)",
+        description="Multimodal model fine-tuned for vision-language tasks (4.5GB disk)",
+        provider="ollama",
+        max_context_tokens=128000,
+    ),
+    "llava-llama3:13b": ModelConfig(
+        model_id="llava-llama3:13b",
+        display_name="LLaVA Llama 3 13B (Local)",
+        description="Powerful multimodal model combining LLaVA and Llama 3 capabilities (8.5GB disk)",
+        provider="ollama",
+        max_context_tokens=128000,
+    ),
+    "granite3.2-vision:2b": ModelConfig(
+        model_id="granite3.2-vision:2b",
+        display_name="Granite 3.2 Vision 2B (Local)",
+        description="Granite 3.2 model with vision capabilities for image understanding tasks (3.5GB disk)",
+        provider="ollama",
+        max_context_tokens=128000,
+    ),
 }
 
 
