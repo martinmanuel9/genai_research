@@ -230,7 +230,7 @@ pull_auto_models() {
             pull_model "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
             # Vision models for moderate VRAM
             pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
+            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
             ;;
         3)  # 16-40 GB VRAM
             print_info "Pulling POWERFUL models for high-end GPU (16-40 GB VRAM)"
@@ -241,8 +241,8 @@ pull_auto_models() {
             pull_model "phi3:medium" "Microsoft Phi-3 Medium (7.9 GB)"
             pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
             # Vision models for high VRAM
-            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-            pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+            pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
             ;;
         4)  # 40+ GB VRAM
             print_info "Pulling ENTERPRISE models for high-end GPU (40+ GB VRAM)"
@@ -269,8 +269,8 @@ pull_auto_models() {
             fi
             # All vision models for enterprise
             pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-            pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+            pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
             ;;
     esac
 }
@@ -353,8 +353,8 @@ case "$MODE" in
 
         # Vision/Multimodal Models
         pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B (1.5 GB)"
-        pull_model "llava:7b" "LLaVA 7B - vision-language (4.5 GB)"
-        pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+        pull_model "llava2:7b" "LLaVA 2 7B - vision-language (4.5 GB)"
+        pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
         ;;
 
     embeddings)
@@ -370,8 +370,8 @@ case "$MODE" in
         echo ""
 
         pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B - lightweight (1.5 GB)"
-        pull_model "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-        pull_model "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+        pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+        pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
         ;;
 
     *)

@@ -200,13 +200,13 @@ function Get-RecommendedTier {
         return 1  # Lightweight tier
     } elseif ($gpu.VramGb -lt 16) {
         Write-Success "Moderate VRAM (8-16 GB) - Recommending balanced models"
-        Write-Host "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b, llava:7b"
+        Write-Host "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b, llava2:7b"
         Write-Host "  Total Size: ~18.7 GB"
         Write-Host ""
         return 2  # Balanced tier
     } elseif ($gpu.VramGb -lt 40) {
         Write-Success "High VRAM (16-40 GB) - Recommending powerful models"
-        Write-Host "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2, llava:7b, llava-llama3"
+        Write-Host "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2, llava2:7b, llava-llama3:13b"
         Write-Host "  Total Size: ~31.8 GB"
         Write-Host ""
         return 3  # Powerful tier
@@ -247,7 +247,7 @@ function Invoke-AutoPull {
             Invoke-PullModel "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
             # Vision models for moderate VRAM
             Invoke-PullModel "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            Invoke-PullModel "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
+            Invoke-PullModel "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
         }
         3 {
             # 16-40 GB VRAM
@@ -259,8 +259,8 @@ function Invoke-AutoPull {
             Invoke-PullModel "phi3:medium" "Microsoft Phi-3 Medium (7.9 GB)"
             Invoke-PullModel "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
             # Vision models for high VRAM
-            Invoke-PullModel "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-            Invoke-PullModel "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+            Invoke-PullModel "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+            Invoke-PullModel "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
         }
         4 {
             # 40+ GB VRAM
@@ -287,8 +287,8 @@ function Invoke-AutoPull {
             }
             # All vision models for enterprise
             Invoke-PullModel "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            Invoke-PullModel "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-            Invoke-PullModel "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+            Invoke-PullModel "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+            Invoke-PullModel "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
         }
     }
 }
@@ -372,8 +372,8 @@ switch ($Mode) {
 
         # Vision/Multimodal Models
         Invoke-PullModel "granite3.2-vision:2b" "IBM Granite Vision 2B (1.5 GB)"
-        Invoke-PullModel "llava:7b" "LLaVA 7B - vision-language (4.5 GB)"
-        Invoke-PullModel "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+        Invoke-PullModel "llava2:7b" "LLaVA 2 7B - vision-language (4.5 GB)"
+        Invoke-PullModel "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
     }
 
     "embeddings" {
@@ -389,8 +389,8 @@ switch ($Mode) {
         Write-Host ""
 
         Invoke-PullModel "granite3.2-vision:2b" "IBM Granite Vision 2B - lightweight (1.5 GB)"
-        Invoke-PullModel "llava:7b" "LLaVA 7B - vision-language model (4.5 GB)"
-        Invoke-PullModel "llava-llama3" "LLaVA Llama 3 - advanced multimodal (5.5 GB)"
+        Invoke-PullModel "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+        Invoke-PullModel "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
     }
 }
 

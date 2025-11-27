@@ -34,6 +34,9 @@ DEFAULT_TOP_K_RESULTS = 5
 VISION_MODELS = {
     "openai": "OpenAI Vision (GPT-4V)",
     "huggingface": "HuggingFace BLIP",
+    "llava2_7b": "Ollama LLaVA 2 7B",
+    "llava_llama3_13b": "Ollama LLaVA Llama 3 13B",
+    "granite_vision_2b": "Ollama Granite Vision 2B",
     "enhanced_local": "Enhanced Local Vision",
     "basic": "Basic Vision Model"
 }

@@ -50,8 +50,14 @@ VISION_CONFIG = {
             "huggingface_enabled": True,
             "enhanced_local_enabled": True,
             "ollama_url": os.getenv("OLLAMA_URL", "http://ollama:11434"),
-            "ollama_model": os.getenv("OLLAMA_VISION_MODEL", "llava"),
-            "huggingface_model": os.getenv("HUGGINGFACE_VISION_MODEL", "Salesforce/blip-image-captioning-base")
+            "ollama_model": os.getenv("OLLAMA_VISION_MODEL", "llava2:7b"),
+            "huggingface_model": os.getenv("HUGGINGFACE_VISION_MODEL", "Salesforce/blip-image-captioning-base"),
+            # Ollama vision model mappings
+            "ollama_models": {
+                "llava2_7b": "llava2:7b",
+                "llava_llama3_13b": "llava-llama3:13b",
+                "granite_vision_2b": "granite3.2-vision:2b"
+            }
         }
 
 # Image storage directory
@@ -204,46 +210,56 @@ async def describe_with_openai_markitdown(image_path: str, api_key: str = openai
         logger.warning(f"OpenAI MarkItDown failed for {image_path}: {e}")
         return None
     
-def describe_with_ollama_vision(image_path: str) -> Optional[str]:
-    """Use Ollama vision model for image description"""
+def describe_with_ollama_vision(image_path: str, model_key: str = None) -> Optional[str]:
+    """Use Ollama vision model for image description
+
+    Args:
+        image_path: Path to the image file
+        model_key: Key for the specific Ollama model (e.g., 'llava2_7b', 'llava_llama3_13b', 'granite_vision_2b')
+                   If None, uses the default model from VISION_CONFIG
+    """
     try:
         if not VISION_CONFIG["ollama_enabled"]:
             return None
-            
+
         if not os.path.exists(image_path):
             logger.error(f"Image file not found: {image_path}")
             return None
-            
+
+        # Determine which model to use
+        if model_key and model_key in VISION_CONFIG.get("ollama_models", {}):
+            model_name = VISION_CONFIG["ollama_models"][model_key]
+        else:
+            model_name = VISION_CONFIG['ollama_model']
+
         # Read and encode image
         with open(image_path, "rb") as img_file:
             img_data = base64.b64encode(img_file.read()).decode()
-        
+
         # Ollama API call
         response = requests.post(
             f"{VISION_CONFIG['ollama_url']}/api/generate",
             json={
-                "model": VISION_CONFIG['ollama_model'],
-                "prompt": "Describe this image succicntly, focusing on the text found in the image. Be specific and descriptive.",
+                "model": model_name,
+                "prompt": "Describe this image succinctly, focusing on the text found in the image. Be specific and descriptive.",
                 "images": [img_data],
                 "stream": False
             },
             timeout= (10, 60)
         )
-        
+
         if response.status_code == 200:
             result = response.json()
             description = result.get("response", "").strip()
             if description and len(description) > 10:
-                return f"Ollama Vision ({VISION_CONFIG['ollama_model']}): {description}"
+                return f"Ollama Vision ({model_name}): {description}"
         else:
-            logger.warning(f"Ollama API returned status {response.status_code}")
-        
+            logger.warning(f"Ollama API returned status {response.status_code} for model {model_name}")
+
         return None
-        
+
     except Exception as e:
-        logger.warning(f"Ollama vision model failed for {image_path}: {e}")
-        # Disable Ollama for subsequent attempts if it fails
-        VISION_CONFIG["ollama_enabled"] = False
+        logger.warning(f"Ollama vision model {model_key or 'default'} failed for {image_path}: {e}")
         return None
 
 
@@ -464,6 +480,13 @@ async def describe_images_for_pages(
                     d = await describe_with_openai_markitdown(img_path, api_key_override)
                     if d:
                         all_desc["OpenAI"] = d
+                # Handle specific Ollama vision models
+                for ollama_key in ["llava2_7b", "llava_llama3_13b", "granite_vision_2b"]:
+                    if ollama_key in enabled_models and vision_flags.get(ollama_key, False):
+                        d = describe_with_ollama_vision(img_path, model_key=ollama_key)
+                        if d:
+                            all_desc[f"Ollama_{ollama_key}"] = d
+                # Legacy ollama support (backward compatibility)
                 if "ollama" in enabled_models and vision_flags.get("ollama", False):
                     d = describe_with_ollama_vision(img_path)
                     if d: all_desc["Ollama"] = d
@@ -483,6 +506,11 @@ async def describe_images_for_pages(
                 d = None
                 if "openai" in enabled_models and vision_flags.get("openai", False):
                     d = await describe_with_openai_markitdown(img_path, api_key_override)
+                # Try specific Ollama models
+                for ollama_key in ["llava2_7b", "llava_llama3_13b", "granite_vision_2b"]:
+                    if not d and ollama_key in enabled_models and vision_flags.get(ollama_key, False):
+                        d = describe_with_ollama_vision(img_path, model_key=ollama_key)
+                # Legacy ollama support (backward compatibility)
                 if not d and "ollama" in enabled_models and vision_flags.get("ollama", False):
                     d = describe_with_ollama_vision(img_path)
                 if not d and "huggingface" in enabled_models and vision_flags.get("huggingface", False):

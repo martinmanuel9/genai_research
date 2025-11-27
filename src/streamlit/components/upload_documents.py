@@ -434,14 +434,22 @@ def render_upload_component(
         # Vision model selection
         st.subheader("Vision Models")
         openai_v = st.checkbox("OpenAI Vision", value=False, key=pref("openai_vision"))
-        # ollama_v = st.checkbox("Ollama Vision", value=False, key=pref("ollama_vision"))
         hf_v = st.checkbox("HuggingFace BLIP Vision", value=False, key=pref("hf_vision"))
+
+        # Ollama Vision Models
+        st.caption("Ollama Vision Models (Local)")
+        llava2_v = st.checkbox("LLaVA 2 7B", value=False, key=pref("llava2_vision"))
+        llava_llama3_v = st.checkbox("LLaVA Llama 3 13B", value=False, key=pref("llava_llama3_vision"))
+        granite_v = st.checkbox("Granite Vision 2B", value=False, key=pref("granite_vision"))
+
         enhanced_v = st.checkbox("Enhanced Vision Model", value=False, key=pref("enhanced_vision"))
         basic_v = st.checkbox("Basic Vision Model", value=False, key=pref("basic_vision"))
         vision_models = []
         if openai_v: vision_models.append("openai")
-        # if ollama_v: vision_models.append("ollama")
         if hf_v: vision_models.append("huggingface")
+        if llava2_v: vision_models.append("llava2_7b")
+        if llava_llama3_v: vision_models.append("llava_llama3_13b")
+        if granite_v: vision_models.append("granite_vision_2b")
         if enhanced_v: vision_models.append("enhanced_local")
         if basic_v: vision_models.append("basic")
 
