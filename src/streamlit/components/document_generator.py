@@ -5,7 +5,7 @@ import streamlit as st
 import base64
 import time
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from services.chromadb_service import chromadb_service
 from components.job_status_monitor import JobStatusMonitor
 

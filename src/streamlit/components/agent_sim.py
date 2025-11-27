@@ -1,6 +1,6 @@
 import streamlit as st
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from components.upload_documents import browse_documents
 from components.single_agent_analysis import single_agent_analysis
 from components.multi_agent_sequence import multi_agent_sequence_debate

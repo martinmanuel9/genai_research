@@ -11,7 +11,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 
 
 def render_session_history():

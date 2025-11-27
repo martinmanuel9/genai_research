@@ -102,7 +102,7 @@ services:
       - ./src/streamlit/components:/app/components
       - ./src/streamlit/pages:/app/pages
       - ./src/streamlit/services:/app/services
-      - ./src/streamlit/lib:/app/lib
+      - ./src/streamlit/app_lib:/app/app_lib
       - ./src/streamlit/config:/app/config
     networks:
       - ai_network

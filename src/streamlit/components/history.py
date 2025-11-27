@@ -1,6 +1,6 @@
 import streamlit as st
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 import base64
 from datetime import datetime
 import re

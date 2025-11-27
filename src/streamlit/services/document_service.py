@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from config.settings import config
 import tempfile
 import base64

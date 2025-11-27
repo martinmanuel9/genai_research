@@ -1,7 +1,7 @@
 import streamlit as st
 from config.settings import config
 from config.constants import MODEL_KEY_MAP as model_key_map, MODEL_DESCRIPTIONS as model_descriptions
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from services.chromadb_service import chromadb_service
 from services.chat_service import chat_service
 from components.upload_documents import render_upload_component, browse_documents

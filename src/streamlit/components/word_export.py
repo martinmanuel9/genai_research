@@ -8,7 +8,7 @@ across the application, with built-in caching, error handling, and consistent UI
 import streamlit as st
 import base64
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 import logging
 import traceback
 from typing import Dict, Any, Optional

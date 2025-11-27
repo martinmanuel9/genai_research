@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 from config.constants import EMBEDDING_MODEL_NAME
 from config.settings import config
 from services.chromadb_service import chromadb_service
-from lib.utils import render_reconstructed_document
+from app_lib.utils import render_reconstructed_document
 from components.job_status_monitor import JobStatusMonitor
 
 

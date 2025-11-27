@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from typing import List, Dict, Optional
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from services.chromadb_service import chromadb_service
 
 VECTORDB_API = config.endpoints.vectordb

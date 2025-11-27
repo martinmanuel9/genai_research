@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from config.settings import config
 from models.models import Collection, Document
 

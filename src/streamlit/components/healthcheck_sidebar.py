@@ -1,6 +1,6 @@
 import streamlit as st
 from config.settings import config
-from lib.api.client import api_client
+from app_lib.api.client import api_client
 from services.chromadb_service import chromadb_service
 
 
