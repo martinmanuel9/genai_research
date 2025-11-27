@@ -96,19 +96,33 @@ jobs:
           ### Windows
           Download and run \`genai-research-$VERSION.msi\`
 
-          ### Linux (Debian/Ubuntu)
+          ### Linux (Debian/Ubuntu) - x86_64
           \`\`\`bash
           sudo dpkg -i genai-research_${VERSION}_amd64.deb
           sudo apt-get install -f  # Install dependencies if needed
           \`\`\`
 
-          ### Linux (RHEL/CentOS/Fedora)
+          ### Linux (Debian/Ubuntu) - ARM64
+          \`\`\`bash
+          sudo dpkg -i genai-research_${VERSION}_arm64.deb
+          sudo apt-get install -f  # Install dependencies if needed
+          \`\`\`
+
+          ### Linux (RHEL/CentOS/Fedora) - x86_64
           \`\`\`bash
           sudo rpm -i genai-research-$VERSION.x86_64.rpm
           \`\`\`
 
-          ### macOS
-          Open \`genai-research-$VERSION.dmg\` and drag to Applications
+          ### Linux (RHEL/CentOS/Fedora) - ARM64
+          \`\`\`bash
+          sudo rpm -i genai-research-$VERSION.aarch64.rpm
+          \`\`\`
+
+          ### macOS (Intel)
+          Open \`genai-research-$VERSION-x86_64.dmg\` and drag to Applications
+
+          ### macOS (Apple Silicon)
+          Open \`genai-research-$VERSION-arm64.dmg\` and drag to Applications
 
           ## Prerequisites
           - Docker 24.0.0 or later
@@ -281,9 +295,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux-deb:
-    name: Build Linux DEB Package
+    name: Build Linux DEB Package (${{ matrix.arch }})
     needs: prepare
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -296,7 +313,8 @@ jobs:
       - name: Prepare DEB package structure
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
-          PKG_DIR="genai-research_${VERSION}_amd64"
+          ARCH="${{ matrix.arch }}"
+          PKG_DIR="genai-research_${VERSION}_${ARCH}"
 
           # Create directory structure
           mkdir -p "$PKG_DIR/opt/genai-research"
@@ -315,8 +333,9 @@ jobs:
           # Copy DEBIAN control files
           cp installer/linux/DEBIAN/* "$PKG_DIR/DEBIAN/"
 
-          # Update version in control file
+          # Update version and architecture in control file
           sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "$PKG_DIR/DEBIAN/control"
+          sed -i "s/Architecture: amd64/Architecture: $ARCH/g" "$PKG_DIR/DEBIAN/control"
 
           # Set permissions
           chmod 755 "$PKG_DIR/DEBIAN/postinst"
@@ -330,7 +349,8 @@ jobs:
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="v$VERSION"
-          ASSET_PATH="genai-research_${VERSION}_amd64.deb"
+          ARCH="${{ matrix.arch }}"
+          ASSET_PATH="genai-research_${VERSION}_${ARCH}.deb"
 
           # Upload with clobber to replace if exists
           gh release upload "$TAG" "$ASSET_PATH" -R ${{ github.repository }} --clobber
@@ -338,9 +358,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux-rpm:
-    name: Build Linux RPM Package
+    name: Build Linux RPM Package (${{ matrix.arch }})
     needs: prepare
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            rpm_arch: x86_64
+          - arch: aarch64
+            rpm_arch: aarch64
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -358,6 +385,7 @@ jobs:
       - name: Create RPM spec file
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+          RPM_ARCH="${{ matrix.rpm_arch }}"
           cat > genai-research.spec <<'SPECEOF'
           Name:           genai-research
           Version:        %{_version}
@@ -367,7 +395,7 @@ jobs:
           URL:            https://github.com/${{ github.repository }}
           Source0:        %{name}-%{version}.tar.gz
           Requires:       docker >= 24.0.0
-          BuildArch:      x86_64
+          BuildArch:      %{_rpm_arch}
 
           %description
           GenAI Research provides comprehensive AI-powered research and
@@ -427,12 +455,14 @@ jobs:
           - Release %{version}
           SPECEOF
 
-          # Replace version placeholder
+          # Replace version and architecture placeholders
           sed -i "s/%{_version}/$VERSION/g" genai-research.spec
+          sed -i "s/%{_rpm_arch}/$RPM_ARCH/g" genai-research.spec
 
       - name: Build RPM package
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+          RPM_ARCH="${{ matrix.rpm_arch }}"
           mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
           cp genai-research.spec ~/rpmbuild/SPECS/
 
@@ -442,8 +472,8 @@ jobs:
           tar czf ~/rpmbuild/SOURCES/genai-research-$VERSION.tar.gz genai-research-$VERSION
           rm -rf genai-research-$VERSION
 
-          # Build RPM
-          rpmbuild -ba ~/rpmbuild/SPECS/genai-research.spec
+          # Build RPM (noarch-like build for script/docker packages)
+          rpmbuild -ba ~/rpmbuild/SPECS/genai-research.spec --target $RPM_ARCH
 
           # Copy built RPM
           find ~/rpmbuild/RPMS -name "*.rpm" -exec cp {} ./ \;
@@ -451,24 +481,33 @@ jobs:
       - name: Find and upload RPM
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
-          RPM_FILE=$(ls genai-research-$VERSION-*.x86_64.rpm | head -1)
+          RPM_ARCH="${{ matrix.rpm_arch }}"
+          RPM_FILE=$(ls genai-research-$VERSION-*.${RPM_ARCH}.rpm | head -1)
           echo "RPM_FILE=$RPM_FILE" >> $GITHUB_ENV
 
       - name: Upload Linux RPM Package
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="v$VERSION"
+          RPM_ARCH="${{ matrix.rpm_arch }}"
           RPM_FILE="${{ env.RPM_FILE }}"
 
           # Upload with clobber to replace if exists, rename to standard name
-          gh release upload "$TAG" "$RPM_FILE#genai-research-$VERSION.x86_64.rpm" -R ${{ github.repository }} --clobber
+          gh release upload "$TAG" "$RPM_FILE#genai-research-$VERSION.${RPM_ARCH}.rpm" -R ${{ github.repository }} --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
-    name: Build macOS DMG
+    name: Build macOS DMG (${{ matrix.arch }})
     needs: prepare
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: macos-13
+          - arch: arm64
+            runner: macos-14
+    runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -476,8 +515,9 @@ jobs:
       - name: Create DMG
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
+          ARCH="${{ matrix.arch }}"
           APP_NAME="GenAI Research"
-          DMG_NAME="genai-research-$VERSION.dmg"
+          DMG_NAME="genai-research-$VERSION-$ARCH.dmg"
 
           # Create app bundle structure
           mkdir -p "build/$APP_NAME.app/Contents/MacOS"
@@ -492,7 +532,7 @@ jobs:
           cp CHANGELOG.md "build/$APP_NAME.app/Contents/Resources/"
           cp README.md "build/$APP_NAME.app/Contents/Resources/"
 
-          # Create Info.plist
+          # Create Info.plist with architecture info
           cat > "build/$APP_NAME.app/Contents/Info.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -506,6 +546,10 @@ jobs:
               <string>$VERSION</string>
               <key>CFBundleExecutable</key>
               <string>launcher</string>
+              <key>LSArchitecturePriority</key>
+              <array>
+                  <string>$ARCH</string>
+              </array>
           </dict>
           </plist>
           EOF
@@ -556,7 +600,8 @@ jobs:
         run: |
           VERSION="${{ needs.prepare.outputs.version }}"
           TAG="v$VERSION"
-          ASSET_PATH="genai-research-$VERSION.dmg"
+          ARCH="${{ matrix.arch }}"
+          ASSET_PATH="genai-research-$VERSION-$ARCH.dmg"
 
           # Upload with clobber to replace if exists
           gh release upload "$TAG" "$ASSET_PATH" -R ${{ github.repository }} --clobber
@@ -605,10 +650,21 @@ jobs:
 
           # Generate checksums only for files that exist
           rm -f checksums-sha256.txt
+
+          # Windows (x64 only)
           [ -f "genai-research-$VERSION.msi" ] && sha256sum genai-research-$VERSION.msi >> checksums-sha256.txt
+
+          # Linux DEB (amd64 and arm64)
           [ -f "genai-research_${VERSION}_amd64.deb" ] && sha256sum genai-research_${VERSION}_amd64.deb >> checksums-sha256.txt
+          [ -f "genai-research_${VERSION}_arm64.deb" ] && sha256sum genai-research_${VERSION}_arm64.deb >> checksums-sha256.txt
+
+          # Linux RPM (x86_64 and aarch64)
           [ -f "genai-research-$VERSION.x86_64.rpm" ] && sha256sum genai-research-$VERSION.x86_64.rpm >> checksums-sha256.txt
-          [ -f "genai-research-$VERSION.dmg" ] && sha256sum genai-research-$VERSION.dmg >> checksums-sha256.txt
+          [ -f "genai-research-$VERSION.aarch64.rpm" ] && sha256sum genai-research-$VERSION.aarch64.rpm >> checksums-sha256.txt
+
+          # macOS DMG (x86_64 and arm64)
+          [ -f "genai-research-$VERSION-x86_64.dmg" ] && sha256sum genai-research-$VERSION-x86_64.dmg >> checksums-sha256.txt
+          [ -f "genai-research-$VERSION-arm64.dmg" ] && sha256sum genai-research-$VERSION-arm64.dmg >> checksums-sha256.txt
 
           if [ -f checksums-sha256.txt ]; then
             cat checksums-sha256.txt

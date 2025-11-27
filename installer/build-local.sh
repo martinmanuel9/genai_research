@@ -31,12 +31,46 @@ echo ""
 
 # Parse arguments
 BUILD_TARGET="${1:-all}"
+BUILD_ARCH="${2:-$(uname -m)}"
+
+# Normalize architecture names
+normalize_arch() {
+    case "$1" in
+        x86_64|amd64)
+            echo "amd64"
+            ;;
+        aarch64|arm64)
+            echo "arm64"
+            ;;
+        *)
+            echo "$1"
+            ;;
+    esac
+}
+
+normalize_rpm_arch() {
+    case "$1" in
+        amd64|x86_64)
+            echo "x86_64"
+            ;;
+        arm64|aarch64)
+            echo "aarch64"
+            ;;
+        *)
+            echo "$1"
+            ;;
+    esac
+}
+
+DEB_ARCH=$(normalize_arch "$BUILD_ARCH")
+RPM_ARCH=$(normalize_rpm_arch "$BUILD_ARCH")
 
 build_linux_deb() {
-    print_info "Building Linux DEB package..."
+    local TARGET_ARCH="${1:-$DEB_ARCH}"
+    print_info "Building Linux DEB package for $TARGET_ARCH..."
 
-    local PKG_DIR="genai-research_${VERSION}_amd64"
-    local BUILD_DIR="$PROJECT_ROOT/build/deb"
+    local PKG_DIR="genai-research_${VERSION}_${TARGET_ARCH}"
+    local BUILD_DIR="$PROJECT_ROOT/build/deb-${TARGET_ARCH}"
 
     # Clean previous build
     rm -rf "$BUILD_DIR"
@@ -88,8 +122,9 @@ build_linux_deb() {
     # Copy DEBIAN control files
     cp "$SCRIPT_DIR/linux/DEBIAN/"* "$BUILD_DIR/$PKG_DIR/DEBIAN/"
 
-    # Update version in control file
+    # Update version and architecture in control file
     sed -i "s/VERSION_PLACEHOLDER/$VERSION/g" "$BUILD_DIR/$PKG_DIR/DEBIAN/control"
+    sed -i "s/Architecture: amd64/Architecture: $TARGET_ARCH/g" "$BUILD_DIR/$PKG_DIR/DEBIAN/control"
 
     # Set permissions
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/postinst"
@@ -110,7 +145,8 @@ build_linux_deb() {
 }
 
 build_linux_rpm() {
-    print_info "Building Linux RPM package..."
+    local TARGET_ARCH="${1:-$RPM_ARCH}"
+    print_info "Building Linux RPM package for $TARGET_ARCH..."
 
     if ! command -v rpmbuild &> /dev/null; then
         print_error "rpmbuild not found. Install with: sudo apt-get install rpm"
@@ -131,6 +167,7 @@ Summary:        AI-powered research and verification system
 License:        Proprietary
 URL:            https://github.com/martinmanuel9/genai_research
 Requires:       docker >= 24.0.0
+BuildArch:      $TARGET_ARCH
 
 %description
 GenAI Research provides comprehensive AI-powered research and
@@ -204,14 +241,14 @@ EOF
         src scripts docker-compose.yml .env.template VERSION CHANGELOG.md README.md
 
     # Build RPM
-    print_info "Building RPM package..."
-    rpmbuild -ba "$SPEC_FILE"
+    print_info "Building RPM package for $TARGET_ARCH..."
+    rpmbuild -ba "$SPEC_FILE" --target "$TARGET_ARCH"
 
     # Copy to dist
     mkdir -p "$PROJECT_ROOT/dist"
-    cp ~/rpmbuild/RPMS/x86_64/genai-research-$VERSION-1.*.x86_64.rpm "$PROJECT_ROOT/dist/"
+    cp ~/rpmbuild/RPMS/$TARGET_ARCH/genai-research-$VERSION-1.*.$TARGET_ARCH.rpm "$PROJECT_ROOT/dist/"
 
-    print_success "RPM package built: dist/genai-research-$VERSION-1.*.x86_64.rpm"
+    print_success "RPM package built: dist/genai-research-$VERSION-1.*.$TARGET_ARCH.rpm"
 }
 
 build_macos_dmg() {
@@ -222,9 +259,20 @@ build_macos_dmg() {
         return 1
     fi
 
+    # Detect macOS architecture
+    local MACOS_ARCH=$(uname -m)
+    case "$MACOS_ARCH" in
+        x86_64)
+            MACOS_ARCH="x86_64"
+            ;;
+        arm64)
+            MACOS_ARCH="arm64"
+            ;;
+    esac
+
     local APP_NAME="GenAI Research"
-    local DMG_NAME="genai-research-$VERSION.dmg"
-    local BUILD_DIR="$PROJECT_ROOT/build/macos"
+    local DMG_NAME="genai-research-$VERSION-$MACOS_ARCH.dmg"
+    local BUILD_DIR="$PROJECT_ROOT/build/macos-$MACOS_ARCH"
 
     # Clean previous build
     rm -rf "$BUILD_DIR"
@@ -244,7 +292,7 @@ build_macos_dmg() {
     cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$APP_NAME.app/Contents/Resources/"
     cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$APP_NAME.app/Contents/Resources/"
 
-    # Create Info.plist
+    # Create Info.plist with architecture info
     cat > "$BUILD_DIR/$APP_NAME.app/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -258,6 +306,10 @@ build_macos_dmg() {
     <string>$VERSION</string>
     <key>CFBundleExecutable</key>
     <string>launcher</string>
+    <key>LSArchitecturePriority</key>
+    <array>
+        <string>$MACOS_ARCH</string>
+    </array>
 </dict>
 </plist>
 EOF
@@ -312,22 +364,32 @@ EOF
 # Main build logic
 case "$BUILD_TARGET" in
     deb)
-        build_linux_deb
+        build_linux_deb "$DEB_ARCH"
         ;;
     rpm)
-        build_linux_rpm
+        build_linux_rpm "$RPM_ARCH"
         ;;
     dmg)
         build_macos_dmg
         ;;
     linux)
-        build_linux_deb
-        build_linux_rpm
+        build_linux_deb "$DEB_ARCH"
+        build_linux_rpm "$RPM_ARCH"
         ;;
     all)
-        print_info "Building all packages..."
-        build_linux_deb || true
-        build_linux_rpm || true
+        print_info "Building all packages for current architecture ($BUILD_ARCH)..."
+        build_linux_deb "$DEB_ARCH" || true
+        build_linux_rpm "$RPM_ARCH" || true
+        if [[ "$(uname -s)" == "Darwin" ]]; then
+            build_macos_dmg || true
+        fi
+        ;;
+    all-arch)
+        print_info "Building all packages for all architectures..."
+        build_linux_deb "amd64" || true
+        build_linux_deb "arm64" || true
+        build_linux_rpm "x86_64" || true
+        build_linux_rpm "aarch64" || true
         if [[ "$(uname -s)" == "Darwin" ]]; then
             build_macos_dmg || true
         fi
@@ -335,13 +397,24 @@ case "$BUILD_TARGET" in
     *)
         print_error "Invalid build target: $BUILD_TARGET"
         echo ""
-        echo "Usage: $0 [deb|rpm|dmg|linux|all]"
+        echo "Usage: $0 [deb|rpm|dmg|linux|all|all-arch] [architecture]"
         echo ""
-        echo "  deb    - Build Debian/Ubuntu package"
-        echo "  rpm    - Build RHEL/CentOS/Fedora package"
-        echo "  dmg    - Build macOS package (macOS only)"
-        echo "  linux  - Build both DEB and RPM"
-        echo "  all    - Build all available packages [default]"
+        echo "Targets:"
+        echo "  deb       - Build Debian/Ubuntu package"
+        echo "  rpm       - Build RHEL/CentOS/Fedora package"
+        echo "  dmg       - Build macOS package (macOS only)"
+        echo "  linux     - Build both DEB and RPM"
+        echo "  all       - Build all available packages for current arch [default]"
+        echo "  all-arch  - Build all packages for both amd64 and arm64"
+        echo ""
+        echo "Architectures (optional, defaults to current system):"
+        echo "  amd64/x86_64   - Intel/AMD 64-bit"
+        echo "  arm64/aarch64  - ARM 64-bit (AWS Graviton, Apple Silicon, etc.)"
+        echo ""
+        echo "Examples:"
+        echo "  $0 deb           # Build DEB for current architecture"
+        echo "  $0 deb arm64     # Build DEB for ARM64"
+        echo "  $0 all-arch      # Build all packages for all architectures"
         exit 1
         ;;
 esac
