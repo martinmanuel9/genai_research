@@ -471,7 +471,7 @@ if (-not $ollamaInstalled) {
             Write-LogSuccess "Ollama installation detected!"
         } else {
             Write-LogWarning "Ollama not detected yet - it may require a system restart"
-            Write-Log "After restarting, use Start Menu > GenAI Research > Download Models"
+            Write-Log "After restarting, use Start Menu -> GenAI Research -> Download Models"
         }
     }
 }
@@ -543,19 +543,19 @@ if ($ollamaInstalled) {
         } else {
             Write-LogWarning "Ollama service is not running - cannot pull models now"
             Write-Log "After restarting your computer, use:"
-            Write-Log "  Start Menu > GenAI Research > Download Models"
+            Write-Log "  Start Menu -> GenAI Research -> Download Models"
         }
     } else {
         Write-Log "Model download skipped"
         Write-Log "You can download models later from:"
-        Write-Log "  Start Menu > GenAI Research > Download Models"
+        Write-Log "  Start Menu -> GenAI Research -> Download Models"
     }
 } else {
     Write-Log "Ollama not installed - skipping model configuration"
     Write-Log "To set up local AI models later:"
     Write-Log "  1. Download Ollama from: https://ollama.com/download/windows"
     Write-Log "  2. Install and restart your computer"
-    Write-Log "  3. Use Start Menu > GenAI Research > Download Models"
+    Write-Log "  3. Use Start Menu -> GenAI Research -> Download Models"
 }
 
 Write-LogSuccess "Step 4/7 Complete"
