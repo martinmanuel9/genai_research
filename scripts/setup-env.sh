@@ -67,58 +67,33 @@ fi
 
 echo ""
 
-# Ollama configuration
-print_header "=== Local Model Configuration (Ollama) ==="
+# Ollama information
+print_header "=== Ollama (Local LLM Support) ==="
 echo ""
 
 if command -v ollama &> /dev/null; then
-    print_success "Ollama detected"
-
-    # Check which models to auto-pull
-    print_info "Select model configuration:"
-    echo "  1) Auto-detect (recommended) - Detects GPU and pulls optimal models"
-    echo "  2) Quick - Lightweight models only (~6.6 GB)"
-    echo "  3) Recommended - Production-ready models (~9 GB)"
-    echo "  4) Full - All models including 70B variants (~100+ GB)"
-    echo "  5) Vision only - Vision/multimodal models for image understanding (~14.5 GB)"
-    echo "  6) None (configure manually later)"
-    read -p "Choice [1-6]: " MODEL_CHOICE
-
-    case $MODEL_CHOICE in
-        1)
-            print_info "Running auto-detection model pull..."
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || print_warning "Model pull encountered issues"
-            print_success "Auto-detected models configured"
-            ;;
-        2)
-            print_info "Pulling quick/lightweight models..."
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" quick || print_warning "Model pull encountered issues"
-            print_success "Quick models configured"
-            ;;
-        3)
-            print_info "Pulling recommended production models..."
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" recommended || print_warning "Model pull encountered issues"
-            print_success "Recommended models configured"
-            ;;
-        4)
-            print_info "Pulling full model set (this will take a while)..."
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" full || print_warning "Model pull encountered issues"
-            print_success "Full model set configured"
-            ;;
-        5)
-            print_info "Pulling vision/multimodal models..."
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" vision || print_warning "Model pull encountered issues"
-            print_success "Vision models configured"
-            ;;
-        *)
-            print_info "No auto-pull configured"
-            print_info "You can pull models later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
-            ;;
-    esac
+    print_success "Ollama is installed"
 else
-    print_warning "Ollama not installed (local models will not be available)"
-    print_info "Install with: $INSTALL_DIR/scripts/install-ollama.sh"
+    print_warning "Ollama is NOT installed"
+    echo ""
+    echo "To install Ollama for local model support, run:"
+    echo "  curl -fsSL https://ollama.com/install.sh | sh"
 fi
+
+echo ""
+echo "After installing Ollama, you must manually start the server and pull models:"
+echo ""
+echo "  1. Start Ollama server:"
+echo "     ollama serve &"
+echo ""
+echo "  2. Pull models (in a new terminal or after server starts):"
+echo "     $INSTALL_DIR/scripts/pull-ollama-models.sh auto"
+echo ""
+echo "     Or pull individual models:"
+echo "     ollama pull llama3.1:8b"
+echo "     ollama pull granite3.2-vision:2b"
+echo ""
+print_info "See $INSTALL_DIR/INSTALL.md for detailed instructions."
 
 echo ""
 print_header "=== Database Configuration ==="

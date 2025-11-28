@@ -45,6 +45,44 @@ After installation:
 2. Start the services: `docker compose up -d`
 3. Access the web interface: http://localhost:8501
 
+## Local Model Support (Ollama)
+
+For local LLM support without cloud dependencies:
+
+### 1. Install Ollama
+
+```bash
+# Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# macOS
+brew install ollama
+
+# Windows: Download from https://ollama.com/download/windows
+```
+
+### 2. Start Ollama Server
+
+```bash
+ollama serve &
+```
+
+### 3. Pull Models (in a new terminal)
+
+```bash
+# Linux
+/opt/genai_research/scripts/pull-ollama-models.sh auto
+
+# Windows (PowerShell)
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode auto
+
+# Or pull individual models
+ollama pull llama3.1:8b
+ollama pull granite3.2-vision:2b
+```
+
+See [INSTALL.md](INSTALL.md) for detailed Ollama setup instructions.
+
 ## Documentation
 
 - [Quick Start Guide](QUICKSTART.md)

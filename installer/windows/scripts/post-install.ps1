@@ -181,107 +181,50 @@ if (Test-DockerRunning) {
 Write-LogSuccess "Step 2/4 Complete"
 
 ###############################################################################
-# STEP 3: Ollama Model Download (Optional)
+# STEP 3: Ollama Information
 ###############################################################################
-Write-LogStep "STEP 3/4: Model Download (Optional)"
+Write-LogStep "STEP 3/4: Ollama (Local LLM Support)"
 
 $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
 
-if (-not $ollamaInstalled) {
-    Write-LogWarning "Ollama is not installed"
-    Write-Log "Ollama provides local LLM support for privacy and cost savings"
-    $installOllama = Read-Host "Would you like to open the Ollama download page? (Y/n)"
+Write-Host ""
+Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "  Ollama (Local LLM Support)" -ForegroundColor Cyan
+Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host ""
 
-    if ($installOllama -ne "n" -and $installOllama -ne "N") {
+if (-not $ollamaInstalled) {
+    Write-LogWarning "Ollama is NOT installed"
+    Write-Host ""
+    Write-Host "To install Ollama for local model support:" -ForegroundColor Yellow
+    Write-Host "  1. Download from: https://ollama.com/download/windows" -ForegroundColor White
+    Write-Host "  2. Run the installer" -ForegroundColor White
+    Write-Host ""
+
+    $openDownload = Read-Host "Open Ollama download page now? (y/N)"
+    if ($openDownload -eq "y" -or $openDownload -eq "Y") {
         Start-Process "https://ollama.com/download/windows"
-        Write-Log "After installing Ollama, run this setup again to download models"
     }
-    Write-LogSuccess "Step 3/4 Complete (Ollama skipped)"
 } else {
     Write-LogSuccess "Ollama is installed"
-
-    Write-Host ""
-    Write-Host "Model download options:" -ForegroundColor Yellow
-    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
-    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
-    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
-    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
-    Write-Host "  5) Full   - All models including 70B variants (100+ GB)"
-    Write-Host "  6) Skip model download"
-    Write-Host ""
-
-    $modelChoice = Read-Host "Select option [1-6] (Enter for Auto)"
-
-    $pullMode = switch ($modelChoice.Trim()) {
-        "1" { "auto" }
-        "2" { "quick" }
-        "3" { "recommended" }
-        "4" { "vision" }
-        "5" { "full" }
-        "6" { "" }
-        "" { "auto" }
-        default { "auto" }
-    }
-
-    if ($pullMode) {
-        Write-Host ""
-
-        # Check if Ollama is already running
-        $ollamaReady = $false
-        try {
-            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 3 -ErrorAction Stop
-            $ollamaReady = $true
-            Write-LogSuccess "Ollama is already running!"
-        } catch {
-            Write-Log "Ollama is not running. Starting Ollama server..."
-
-            # Start ollama serve in background
-            $env:OLLAMA_HOST = "0.0.0.0:11434"
-            Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden
-
-            # Wait for Ollama to start (GPU init can take time)
-            Write-Log "Waiting for Ollama to initialize (this may take 30-60 seconds)..."
-            $maxAttempts = 24
-
-            for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-                Start-Sleep -Seconds 5
-                try {
-                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
-                    $ollamaReady = $true
-                    Write-LogSuccess "Ollama is ready!"
-                    break
-                } catch {
-                    # Show progress every 5 attempts
-                    if ($attempt % 5 -eq 0) {
-                        Write-Host "  Still initializing... ($($attempt * 5) seconds elapsed)" -ForegroundColor DarkGray
-                    }
-                }
-            }
-        }
-
-        if (-not $ollamaReady) {
-            Write-LogWarning "Ollama failed to start after 2 minutes"
-            Write-Log "Try starting Ollama manually from the Start Menu, then run:"
-            Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode" -ForegroundColor Yellow
-        } else {
-            Write-Log "Running model pull script with mode: $pullMode"
-
-            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
-            if (Test-Path $pullScript) {
-                & $pullScript -Mode $pullMode
-            } else {
-                Write-LogWarning "Pull script not found at: $pullScript"
-                Write-Log "Falling back to basic model pull..."
-                ollama pull snowflake-arctic-embed2
-                ollama pull llama3.2:3b
-            }
-
-            Write-LogSuccess "Models downloaded"
-        }
-    }
-
-    Write-LogSuccess "Step 3/4 Complete"
 }
+
+Write-Host ""
+Write-Host "After installing Ollama, you must manually start the server and pull models:" -ForegroundColor Yellow
+Write-Host ""
+Write-Host "  1. Start Ollama server (in PowerShell):" -ForegroundColor White
+Write-Host "     ollama serve" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  2. In a NEW PowerShell window, pull models:" -ForegroundColor White
+Write-Host "     $InstallDir\scripts\pull-ollama-models.ps1 -Mode auto" -ForegroundColor Gray
+Write-Host ""
+Write-Host "     Or pull individual models:" -ForegroundColor White
+Write-Host "     ollama pull llama3.1:8b" -ForegroundColor Gray
+Write-Host "     ollama pull granite3.2-vision:2b" -ForegroundColor Gray
+Write-Host ""
+Write-Host "See $InstallDir\INSTALL.md for detailed instructions." -ForegroundColor DarkGray
+
+Write-LogSuccess "Step 3/4 Complete"
 
 ###############################################################################
 # STEP 4: Build Docker Images

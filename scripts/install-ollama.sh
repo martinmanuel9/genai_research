@@ -67,93 +67,29 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable ollama
 
-# Stop any existing ollama processes to ensure clean start
-print_info "Stopping any existing Ollama processes..."
-sudo systemctl stop ollama 2>/dev/null || true
-pkill -f "ollama serve" 2>/dev/null || true
-sleep 2
-
-# Start ollama serve directly (more reliable than systemd on first install)
-print_info "Starting Ollama server..."
-OLLAMA_HOST=0.0.0.0:11434 nohup ollama serve > /tmp/ollama-install.log 2>&1 &
-OLLAMA_PID=$!
-
-# Wait for Ollama to start
-print_info "Waiting for Ollama to initialize (this may take 30-60 seconds on first run)..."
-MAX_RETRIES=24
-RETRY_INTERVAL=5
-OLLAMA_READY=false
-
-for i in $(seq 1 $MAX_RETRIES); do
-    if curl -s http://localhost:11434/api/tags &> /dev/null; then
-        OLLAMA_READY=true
-        break
-    fi
-
-    # Check if process is still running
-    if ! kill -0 $OLLAMA_PID 2>/dev/null; then
-        print_error "Ollama process died unexpectedly"
-        print_info "Check log: cat /tmp/ollama-install.log"
-        break
-    fi
-
-    # Show progress every 5 attempts
-    if [ $((i % 5)) -eq 0 ]; then
-        print_info "Still initializing... ($((i * RETRY_INTERVAL)) seconds elapsed)"
-    else
-        echo -n "."
-    fi
-    sleep $RETRY_INTERVAL
-done
-echo ""
-
-# Verify Ollama is running
-if [ "$OLLAMA_READY" = true ]; then
-    print_success "Ollama installed and running successfully!"
-
-    # Now try to set up systemd to manage it going forward
-    print_info "Configuring systemd service for auto-start on boot..."
-
-    # Kill manual process and let systemd take over
-    kill $OLLAMA_PID 2>/dev/null || true
-    sleep 2
-
-    # Start via systemd
-    sudo systemctl start ollama
-
-    # Verify systemd started it
-    sleep 3
-    if curl -s http://localhost:11434/api/tags &> /dev/null; then
-        print_success "Ollama systemd service is running"
-    else
-        # Systemd didn't work, restart manual process
-        print_warning "Systemd service not responding, keeping manual mode"
-        OLLAMA_HOST=0.0.0.0:11434 nohup ollama serve > /tmp/ollama.log 2>&1 &
-        sleep 3
-        if curl -s http://localhost:11434/api/tags &> /dev/null; then
-            print_success "Ollama running in manual mode"
-            print_info "Note: After reboot, you may need to run: ollama serve"
-        fi
-    fi
-else
-    print_error "Ollama failed to start"
-    print_info "Check log: cat /tmp/ollama-install.log"
-    print_info ""
-    print_info "Try starting manually:"
-    echo "     ollama serve"
-    exit 1
-fi
+print_success "Ollama installed successfully!"
 
 echo ""
-print_info "Next steps:"
-echo "  1. Pull recommended models:"
+echo "════════════════════════════════════════════════════════════════"
+echo "  Next Steps (REQUIRED)"
+echo "════════════════════════════════════════════════════════════════"
+echo ""
+echo "You must manually start Ollama and pull models:"
+echo ""
+echo "  1. Start Ollama server:"
+echo "     ollama serve &"
+echo ""
+echo "  2. In a new terminal (or wait for server to start), pull models:"
 echo "     /opt/genai_research/scripts/pull-ollama-models.sh auto"
 echo ""
-echo "  2. Or manually pull specific models:"
+echo "     Or pull individual models:"
 echo "     ollama pull llama3.1:8b"
+echo "     ollama pull granite3.2-vision:2b"
+echo "     ollama pull llava2:7b"
 echo ""
 echo "  3. Test a model:"
 echo "     ollama run llama3.1:8b"
 echo ""
-print_success "Ollama is ready to use!"
+echo "For auto-start on boot, the systemd service is enabled."
+echo "After a reboot, Ollama should start automatically."
 echo ""

@@ -285,9 +285,13 @@ LANGSMITH_PROJECT=your-project-name
 
 ### 2. Install Ollama for Local Models (Optional)
 
+Ollama provides local LLM support for privacy-sensitive environments and offline use.
+
+#### Step 1: Install Ollama
+
 **Linux:**
 ```bash
-sudo /opt/genai_research/scripts/install-ollama.sh
+curl -fsSL https://ollama.com/install.sh | sh
 ```
 
 **macOS:**
@@ -298,29 +302,96 @@ brew install ollama
 
 **Windows:**
 - Download from: https://ollama.com/download/windows
-- Install and start Ollama
+- Run the installer
 
-### 3. Pull Recommended Models
+#### Step 2: Start Ollama Server
+
+**IMPORTANT:** You must start the Ollama server before pulling or using models.
+
+**Linux/macOS:**
+```bash
+# Start Ollama server in background
+ollama serve &
+
+# Wait a few seconds for it to start
+sleep 5
+
+# Verify it's running
+curl http://localhost:11434/api/tags
+```
+
+**Windows (PowerShell):**
+```powershell
+# Start Ollama server (opens in new window)
+Start-Process ollama -ArgumentList "serve"
+
+# Or run in current window (will block)
+ollama serve
+```
+
+#### Step 3: Pull Models
+
+**IMPORTANT:** Open a NEW terminal window (keep the server running) to pull models.
 
 **Auto-detect GPU and pull optimal models:**
 ```bash
-# Linux/macOS
+# Linux
 /opt/genai_research/scripts/pull-ollama-models.sh auto
 
-# Windows
-cd "C:\Program Files\GenAI Research\scripts"
-.\pull-ollama-models.sh auto
+# macOS
+/Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh auto
+
+# Windows (in new PowerShell window)
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode auto
 ```
 
 **Or manually pull specific models:**
 ```bash
-ollama pull llama3.1:8b
-ollama pull llama3.2:3b
-ollama pull phi3:mini
-ollama pull snowflake-arctic-embed2
+# Text models
+ollama pull llama3.1:8b          # Recommended general model (4.7 GB)
+ollama pull llama3.2:3b          # Lightweight model (2 GB)
+ollama pull phi3:mini            # Microsoft's efficient model (2.3 GB)
+
+# Embedding model (for RAG)
+ollama pull snowflake-arctic-embed2   # Required for document search (1.7 GB)
+
+# Vision models (for image understanding)
+ollama pull granite3.2-vision:2b      # Lightweight vision (1.5 GB)
+ollama pull llava2:7b                 # Vision-language model (4.5 GB)
+ollama pull llava-llama3:13b          # Advanced multimodal (8.5 GB)
 ```
 
-### 4. Verify Installation
+#### Step 4: Verify Models
+
+```bash
+# List installed models
+ollama list
+
+# Test a model
+ollama run llama3.1:8b "Hello, how are you?"
+```
+
+#### Auto-Start on Boot (Optional)
+
+**Linux (systemd):**
+The Ollama installer automatically sets up a systemd service. After a reboot, Ollama should start automatically.
+```bash
+# Check service status
+sudo systemctl status ollama
+
+# Enable if not enabled
+sudo systemctl enable ollama
+```
+
+**Windows:**
+Ollama typically runs as a background app. You can add it to Windows Startup apps.
+
+**macOS:**
+```bash
+# Add to login items via System Preferences > Users & Groups > Login Items
+```
+
+### 3. Verify Installation
 
 **Check all services are running:**
 ```bash

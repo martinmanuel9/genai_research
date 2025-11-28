@@ -82,65 +82,34 @@ fi
 
 echo ""
 
-# Helper function to wait for Ollama to be ready
-wait_for_ollama() {
-    echo "Waiting for Ollama service to be ready (this may take up to 2 minutes)..."
-    local max_attempts=24
-    local attempt=1
-    while [ $attempt -le $max_attempts ]; do
-        if curl -s http://localhost:11434/api/tags &> /dev/null; then
-            echo "[SUCCESS] Ollama is ready!"
-            return 0
-        fi
-        # Show progress every 5 attempts
-        if [ $((attempt % 5)) -eq 0 ]; then
-            echo "  Still waiting... ($((attempt * 5)) seconds elapsed)"
-        fi
-        sleep 5
-        attempt=$((attempt + 1))
-    done
-    echo "[WARNING] Ollama service is not responding after 2 minutes"
-    return 1
-}
-
-# Optional: Install and configure Ollama
-if ! command -v ollama &> /dev/null; then
-    read -p "Install Ollama for local model support? (y/N): " -n 1 -r
-    echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installing Ollama..."
-        "$INSTALL_DIR/scripts/install-ollama.sh" || echo "[WARNING] Ollama installation encountered issues. You can install it manually later."
-
-        # Pull models if Ollama was installed successfully
-        if command -v ollama &> /dev/null; then
-            read -p "Pull recommended Ollama models now? (y/N): " -n 1 -r
-            echo ""
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                # Wait for Ollama to be ready before pulling
-                if wait_for_ollama; then
-                    echo "Pulling models (this may take several minutes)..."
-                    "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || echo "[WARNING] Model pull encountered issues. You can pull models manually later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
-                else
-                    echo "[WARNING] Ollama is not ready. You can pull models manually later with:"
-                    echo "  $INSTALL_DIR/scripts/pull-ollama-models.sh auto"
-                fi
-            fi
-        fi
-    fi
+# Ollama information
+echo ""
+echo "════════════════════════════════════════════════════════════════"
+echo "  Ollama (Local LLM Support)"
+echo "════════════════════════════════════════════════════════════════"
+echo ""
+if command -v ollama &> /dev/null; then
+    echo "[INFO] Ollama is already installed."
 else
-    echo "Ollama is already installed."
-    read -p "Pull/update Ollama models now? (y/N): " -n 1 -r
+    echo "[INFO] Ollama is NOT installed."
     echo ""
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        # Wait for Ollama to be ready before pulling
-        if wait_for_ollama; then
-            "$INSTALL_DIR/scripts/pull-ollama-models.sh" auto || echo "[WARNING] Model pull encountered issues. You can pull models manually later with: $INSTALL_DIR/scripts/pull-ollama-models.sh"
-        else
-            echo "[WARNING] Ollama is not ready. You can pull models manually later with:"
-            echo "  $INSTALL_DIR/scripts/pull-ollama-models.sh auto"
-        fi
-    fi
+    echo "To install Ollama for local model support, run:"
+    echo "  curl -fsSL https://ollama.com/install.sh | sh"
 fi
+echo ""
+echo "After installing Ollama, you must manually start the server and pull models:"
+echo ""
+echo "  1. Start Ollama server:"
+echo "     ollama serve &"
+echo ""
+echo "  2. Pull models (in a new terminal or after server starts):"
+echo "     $INSTALL_DIR/scripts/pull-ollama-models.sh auto"
+echo ""
+echo "     Or pull individual models:"
+echo "     ollama pull llama3.1:8b"
+echo "     ollama pull granite3.2-vision:2b"
+echo ""
+echo "See $INSTALL_DIR/INSTALL.md for detailed instructions."
 
 echo ""
 echo "════════════════════════════════════════════════════════════════"

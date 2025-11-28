@@ -145,86 +145,33 @@ if ($openaiKey) {
 
 Write-Host ""
 
-# Ollama configuration
-Write-Header "Local Model Configuration (Ollama)"
+# Ollama information
+Write-Header "Ollama (Local LLM Support)"
 
 $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
 if ($ollamaInstalled) {
-    Write-Success "Ollama detected"
-
-    Write-Info "Would you like to pull models now?"
-    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
-    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
-    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
-    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
-    Write-Host "  5) Skip   - Configure manually later"
-    $modelChoice = Read-Host "Choice [1-5]"
-
-    $pullMode = switch ($modelChoice) {
-        "1" { "auto" }
-        "2" { "quick" }
-        "3" { "recommended" }
-        "4" { "vision" }
-        "5" { "" }
-        default { "" }
-    }
-
-    if ($pullMode) {
-        # Check if Ollama is already running
-        $ollamaReady = $false
-        try {
-            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 3 -ErrorAction Stop
-            $ollamaReady = $true
-            Write-Success "Ollama is already running!"
-        } catch {
-            Write-Info "Ollama is not running. Starting Ollama server..."
-
-            # Start ollama serve in background
-            $env:OLLAMA_HOST = "0.0.0.0:11434"
-            Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden
-
-            # Wait for Ollama to start (GPU init can take time)
-            Write-Info "Waiting for Ollama to initialize (this may take 30-60 seconds)..."
-            $maxAttempts = 24
-
-            for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-                Start-Sleep -Seconds 5
-                try {
-                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
-                    $ollamaReady = $true
-                    Write-Success "Ollama is ready!"
-                    break
-                } catch {
-                    # Show progress every 5 attempts
-                    if ($attempt % 5 -eq 0) {
-                        Write-Host "  Still initializing... ($($attempt * 5) seconds elapsed)"
-                    }
-                }
-            }
-        }
-
-        if (-not $ollamaReady) {
-            Write-Warning "Ollama failed to start after 2 minutes"
-            Write-Info "Try starting Ollama manually from the Start Menu, then run:"
-            Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode"
-        } else {
-            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
-            if (Test-Path $pullScript) {
-                Write-Info "Running model pull script with mode: $pullMode"
-                & $pullScript -Mode $pullMode
-                Write-Success "Models pulled successfully"
-            } else {
-                Write-Warning "Pull script not found at: $pullScript"
-                Write-Info "You can run it manually later from the scripts directory"
-            }
-        }
-    } else {
-        Write-Info "Model pull skipped - you can run scripts\pull-ollama-models.ps1 later"
-    }
+    Write-Success "Ollama is installed"
 } else {
-    Write-Warning "Ollama not installed (local models will not be available)"
-    Write-Info "Download from: https://ollama.com/download/windows"
+    Write-Warning "Ollama is NOT installed"
+    Write-Host ""
+    Write-Host "To install Ollama for local model support:"
+    Write-Host "  Download from: https://ollama.com/download/windows"
 }
+
+Write-Host ""
+Write-Host "After installing Ollama, you must manually start the server and pull models:"
+Write-Host ""
+Write-Host "  1. Start Ollama server (in PowerShell):"
+Write-Host "     ollama serve"
+Write-Host ""
+Write-Host "  2. In a NEW PowerShell window, pull models:"
+Write-Host "     $InstallDir\scripts\pull-ollama-models.ps1 -Mode auto"
+Write-Host ""
+Write-Host "     Or pull individual models:"
+Write-Host "     ollama pull llama3.1:8b"
+Write-Host "     ollama pull granite3.2-vision:2b"
+Write-Host ""
+Write-Info "See $InstallDir\INSTALL.md for detailed instructions."
 
 Write-Host ""
 Write-Header "Database Configuration"
