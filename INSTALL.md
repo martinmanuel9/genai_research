@@ -308,10 +308,12 @@ brew install ollama
 
 **IMPORTANT:** You must start the Ollama server before pulling or using models.
 
+**IMPORTANT:** For Docker containers to access Ollama, it must listen on all interfaces (0.0.0.0), not just localhost.
+
 **Linux/macOS:**
 ```bash
-# Start Ollama server in background
-ollama serve &
+# Start Ollama server listening on all interfaces (required for Docker)
+OLLAMA_HOST=0.0.0.0:11434 ollama serve &
 
 # Wait a few seconds for it to start
 sleep 5
@@ -322,11 +324,12 @@ curl http://localhost:11434/api/tags
 
 **Windows (PowerShell):**
 ```powershell
-# Start Ollama server (opens in new window)
-Start-Process ollama -ArgumentList "serve"
-
-# Or run in current window (will block)
+# Start Ollama server listening on all interfaces (required for Docker)
+$env:OLLAMA_HOST = "0.0.0.0:11434"
 ollama serve
+
+# Or in one line (opens in new window)
+Start-Process powershell -ArgumentList "-Command", "`$env:OLLAMA_HOST='0.0.0.0:11434'; ollama serve"
 ```
 
 #### Step 3: Pull Models

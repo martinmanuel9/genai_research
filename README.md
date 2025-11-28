@@ -64,7 +64,11 @@ brew install ollama
 ### 2. Start Ollama Server
 
 ```bash
-ollama serve &
+# Linux/macOS - must listen on all interfaces for Docker access
+OLLAMA_HOST=0.0.0.0:11434 ollama serve &
+
+# Windows (PowerShell)
+$env:OLLAMA_HOST = "0.0.0.0:11434"; ollama serve
 ```
 
 ### 3. Pull Models (in a new terminal)

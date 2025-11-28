@@ -1,13 +1,14 @@
 ###############################################################################
 # Windows Environment Setup Script
-# Interactive configuration wizard for .env file
+# Simple configuration wizard - only prompts for API keys
+# All other settings use pre-configured defaults from .env.template
 ###############################################################################
 
 param(
     [string]$InstallDir = "$env:ProgramFiles\GenAI Research"
 )
 
-$ErrorActionPreference = "Continue"  # Show errors but continue with the wizard
+$ErrorActionPreference = "Continue"
 
 # Colors
 function Write-Info {
@@ -38,6 +39,7 @@ function Write-Header {
 }
 
 $EnvFile = Join-Path $InstallDir ".env"
+$EnvTemplate = Join-Path $InstallDir ".env.template"
 
 Write-Host ""
 Write-Host "═══════════════════════════════════════════════════════════════"
@@ -48,104 +50,58 @@ Write-Host ""
 # Check if .env already exists
 if (Test-Path $EnvFile) {
     Write-Warning ".env file already exists"
-    Write-Host ""
-    Write-Host "Options:"
-    Write-Host "  1) Keep existing configuration (exit)"
-    Write-Host "  2) Reconfigure interactively"
-    Write-Host "  3) Import from .env file (paste contents)"
-    Write-Host "  4) Import from .env file (select file)"
-    $option = Read-Host "Choice [1-4]"
+    $option = Read-Host "Do you want to reconfigure? (y/N)"
 
-    switch ($option) {
-        "1" {
-            Write-Info "Configuration cancelled - keeping existing .env"
-            exit 0
-        }
-        "2" {
-            # Continue with interactive configuration
-            $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-            Copy-Item $EnvFile "$EnvFile.backup.$timestamp"
-            Write-Info "Existing configuration backed up to .env.backup.$timestamp"
-        }
-        "3" {
-            # Import from pasted content
-            Write-Info "Paste your .env file contents below."
-            Write-Info "Press Ctrl+Z then Enter when done (or type END on a new line):"
-            Write-Host ""
-
-            $lines = @()
-            do {
-                $line = Read-Host
-                if ($line -eq "END") { break }
-                $lines += $line
-            } while ($true)
-
-            $content = $lines -join "`n"
-            if ($content.Trim()) {
-                $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-                Copy-Item $EnvFile "$EnvFile.backup.$timestamp"
-                Set-Content -Path $EnvFile -Value $content
-                Write-Success ".env file updated from pasted content"
-                Write-Info "Previous configuration backed up to .env.backup.$timestamp"
-                exit 0
-            } else {
-                Write-Warning "No content provided, continuing with interactive setup"
-            }
-        }
-        "4" {
-            # Import from file
-            Add-Type -AssemblyName System.Windows.Forms
-            $openFileDialog = New-Object System.Windows.Forms.OpenFileDialog
-            $openFileDialog.Title = "Select .env file"
-            $openFileDialog.Filter = "Environment files (*.env)|*.env|All files (*.*)|*.*"
-            $openFileDialog.InitialDirectory = [Environment]::GetFolderPath('MyDocuments')
-
-            if ($openFileDialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
-                $selectedFile = $openFileDialog.FileName
-                if (Test-Path $selectedFile) {
-                    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-                    Copy-Item $EnvFile "$EnvFile.backup.$timestamp"
-                    Copy-Item $selectedFile $EnvFile -Force
-                    Write-Success ".env file updated from: $selectedFile"
-                    Write-Info "Previous configuration backed up to .env.backup.$timestamp"
-                    exit 0
-                } else {
-                    Write-Warning "Selected file not found, continuing with interactive setup"
-                }
-            } else {
-                Write-Warning "No file selected, continuing with interactive setup"
-            }
-        }
-        default {
-            Write-Info "Invalid option, continuing with interactive setup"
-        }
+    if ($option -ne "y" -and $option -ne "Y") {
+        Write-Info "Configuration cancelled - keeping existing .env"
+        exit 0
     }
+
+    # Backup existing
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    Copy-Item $EnvFile "$EnvFile.backup.$timestamp"
+    Write-Info "Existing configuration backed up"
 }
 
 # Start with template
-$EnvTemplate = Join-Path $InstallDir ".env.template"
 if (Test-Path $EnvTemplate) {
-    Copy-Item $EnvTemplate $EnvFile
+    Copy-Item $EnvTemplate $EnvFile -Force
+    Write-Success "Created .env from template with default settings"
 } else {
     Write-ErrorMsg "Template file not found: $EnvTemplate"
     exit 1
 }
 
 Write-Header "API Keys Configuration"
+Write-Info "All other settings are pre-configured with working defaults."
+Write-Host ""
 
 # OpenAI API Key
-Write-Info "OpenAI API Key (for GPT-4, GPT-4o, etc.)"
+Write-Info "OpenAI API Key (required for cloud models like GPT-4, GPT-4o)"
 $openaiKey = Read-Host "Enter OpenAI API Key (press Enter to skip)"
 if ($openaiKey) {
     (Get-Content $EnvFile) -replace '^OPENAI_API_KEY=.*', "OPENAI_API_KEY=$openaiKey" | Set-Content $EnvFile
     Write-Success "OpenAI API key configured"
 } else {
-    Write-Warning "OpenAI API key not configured (cloud models will not be available)"
+    Write-Warning "OpenAI API key not configured"
+    Write-Info "You can use local Ollama models instead, or add the key later"
 }
 
 Write-Host ""
 
-# Ollama information
+# LangSmith (Optional)
+Write-Info "LangSmith API Key (optional - for debugging and monitoring)"
+$langsmithKey = Read-Host "Enter LangSmith API Key (press Enter to skip)"
+if ($langsmithKey) {
+    $langsmithProject = Read-Host "Enter LangSmith project name"
+    (Get-Content $EnvFile) -replace '^LANGCHAIN_API_KEY=.*', "LANGCHAIN_API_KEY=$langsmithKey" | Set-Content $EnvFile
+    (Get-Content $EnvFile) -replace '^LANGSMITH_PROJECT=.*', "LANGSMITH_PROJECT=$langsmithProject" | Set-Content $EnvFile
+    (Get-Content $EnvFile) -replace '^LANGSMITH_TRACING=.*', 'LANGSMITH_TRACING=true' | Set-Content $EnvFile
+    Write-Success "LangSmith tracing enabled"
+} else {
+    Write-Info "LangSmith tracing disabled (can be enabled later)"
+}
+
 Write-Header "Ollama (Local LLM Support)"
 
 $ollamaInstalled = Get-Command ollama -ErrorAction SilentlyContinue
@@ -162,61 +118,26 @@ Write-Host ""
 Write-Host "After installing Ollama, you must manually start the server and pull models:"
 Write-Host ""
 Write-Host "  1. Start Ollama server (in PowerShell):"
-Write-Host "     ollama serve"
+Write-Host "     `$env:OLLAMA_HOST='0.0.0.0:11434'; ollama serve"
 Write-Host ""
 Write-Host "  2. In a NEW PowerShell window, pull models:"
 Write-Host ""
-Write-Host "     # Pull recommended text models for chat/generation (~9 GB)"
-Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode recommended"
+Write-Host "     # Pull recommended text models for chat/generation (~9 GB)" -ForegroundColor DarkGray
+Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode recommended" -ForegroundColor Gray
 Write-Host ""
-Write-Host "     # Pull vision models for image understanding (~14.5 GB)"
-Write-Host "     # Includes: granite3.2-vision:2b, llava:7b, llava:13b"
-Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode vision"
+Write-Host "     # Pull vision models for image understanding (~14.5 GB)" -ForegroundColor DarkGray
+Write-Host "     # Includes: granite3.2-vision:2b, llava:7b, llava:13b" -ForegroundColor DarkGray
+Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode vision" -ForegroundColor Gray
 Write-Host ""
 Write-Info "See $InstallDir\INSTALL.md for detailed instructions."
 
-Write-Host ""
-Write-Header "Database Configuration"
-
-# Database password
-Write-Info "PostgreSQL database password"
-$dbPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 24 | ForEach-Object { [char]$_ })
-$useGenerated = Read-Host "Use generated password? (Y/n)"
-if ($useGenerated -eq "n" -or $useGenerated -eq "N") {
-    $securePassword = Read-Host "Enter PostgreSQL password" -AsSecureString
-    $dbPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword))
-}
-
-(Get-Content $EnvFile) -replace '^DB_PASSWORD=.*', "DB_PASSWORD=$dbPassword" | Set-Content $EnvFile
-$databaseUrl = "postgresql://g3nA1-user:$dbPassword@postgres:5432/rag_memory"
-(Get-Content $EnvFile) -replace '^DATABASE_URL=.*', "DATABASE_URL=$databaseUrl" | Set-Content $EnvFile
-Write-Success "Database password configured"
-
-Write-Host ""
-Write-Header "Optional: LangSmith Tracing"
-
-$enableLangSmith = Read-Host "Enable LangSmith tracing? (y/N)"
-if ($enableLangSmith -eq "y" -or $enableLangSmith -eq "Y") {
-    $langsmithKey = Read-Host "Enter LangSmith API key"
-    $langsmithProject = Read-Host "Enter LangSmith project name"
-
-    (Get-Content $EnvFile) -replace '^LANGCHAIN_API_KEY=.*', "LANGCHAIN_API_KEY=$langsmithKey" | Set-Content $EnvFile
-    (Get-Content $EnvFile) -replace '^LANGSMITH_PROJECT=.*', "LANGSMITH_PROJECT=$langsmithProject" | Set-Content $EnvFile
-    (Get-Content $EnvFile) -replace '^LANGSMITH_TRACING=.*', 'LANGSMITH_TRACING=true' | Set-Content $EnvFile
-    Write-Success "LangSmith tracing enabled"
-} else {
-    (Get-Content $EnvFile) -replace '^LANGSMITH_TRACING=.*', 'LANGSMITH_TRACING=false' | Set-Content $EnvFile
-    Write-Info "LangSmith tracing disabled"
-}
-
-Write-Host ""
-Write-Header "Configuration Summary"
+Write-Header "Setup Complete"
 
 Write-Success "Environment configuration completed!"
 Write-Host ""
 Write-Host "Configuration file: $EnvFile"
 Write-Host ""
-Write-Info "Configured services:"
+Write-Info "Pre-configured services (ready to use):"
 Write-Host "  - FastAPI Backend: http://localhost:9020"
 Write-Host "  - Streamlit Web UI: http://localhost:8501"
 Write-Host "  - PostgreSQL: localhost:5432"
