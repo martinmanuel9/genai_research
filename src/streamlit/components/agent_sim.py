@@ -5,6 +5,7 @@ from components.upload_documents import browse_documents
 from components.single_agent_analysis import single_agent_analysis
 from components.multi_agent_sequence import multi_agent_sequence_debate
 from components.document_debate import document_based_debate
+from components.agent_set_pipeline import agent_set_pipeline
 
 
 def Agent_Sim():
@@ -59,14 +60,19 @@ def Agent_Sim():
         st.dataframe(agents_table_data, use_container_width=True, height=400)
         
         st.markdown("---")
-        
+
         # Tabbed interface for different analysis types
-        analysis_tab, document_tab, sequence_tab = st.tabs([
-            "Single Agent Analysis", 
-            "Document-Based Debate", 
+        pipeline_tab, analysis_tab, document_tab, sequence_tab = st.tabs([
+            "Agent Set Pipeline",
+            "Single Agent Analysis",
+            "Document-Based Debate",
             "Multi-Agent Sequence"
         ])
-        
+
+        # === AGENT SET PIPELINE TAB ===
+        with pipeline_tab:
+            agent_set_pipeline()
+
         # === SINGLE AGENT ANALYSIS TAB ===
         with analysis_tab:
             single_agent_analysis(agents, agent_choices, collections)

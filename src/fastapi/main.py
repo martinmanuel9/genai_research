@@ -17,6 +17,7 @@ from api.vectordb_api import vectordb_api_router
 from api.models_api import models_api_router
 from api.test_plan_agent_api import router as test_plan_agent_router
 from api.agent_set_api import router as agent_set_router
+from api.agent_pipeline_api import agent_pipeline_router
 
 app = FastAPI()
 
@@ -47,6 +48,7 @@ app.include_router(vectordb_api_router, prefix="/api")
 app.include_router(models_api_router, prefix="/api")
 app.include_router(test_plan_agent_router, prefix="/api")
 app.include_router(agent_set_router, prefix="/api")
+app.include_router(agent_pipeline_router, prefix="/api")
 
 @app.get("/")
 async def root():
