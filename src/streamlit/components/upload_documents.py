@@ -438,8 +438,8 @@ def render_upload_component(
 
         # Ollama Vision Models
         st.caption("Ollama Vision Models (Local)")
-        llava2_v = st.checkbox("LLaVA 2 7B", value=False, key=pref("llava2_vision"))
-        llava_llama3_v = st.checkbox("LLaVA Llama 3 13B", value=False, key=pref("llava_llama3_vision"))
+        llava_7b_v = st.checkbox("LLaVA 1.6 7B", value=False, key=pref("llava_7b_vision"))
+        llava_13b_v = st.checkbox("LLaVA 1.6 13B", value=False, key=pref("llava_13b_vision"))
         granite_v = st.checkbox("Granite Vision 2B", value=False, key=pref("granite_vision"))
 
         enhanced_v = st.checkbox("Enhanced Vision Model", value=False, key=pref("enhanced_vision"))
@@ -447,8 +447,8 @@ def render_upload_component(
         vision_models = []
         if openai_v: vision_models.append("openai")
         if hf_v: vision_models.append("huggingface")
-        if llava2_v: vision_models.append("llava2_7b")
-        if llava_llama3_v: vision_models.append("llava_llama3_13b")
+        if llava_7b_v: vision_models.append("llava_7b")
+        if llava_13b_v: vision_models.append("llava_13b")
         if granite_v: vision_models.append("granite_vision_2b")
         if enhanced_v: vision_models.append("enhanced_local")
         if basic_v: vision_models.append("basic")

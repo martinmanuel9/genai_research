@@ -183,13 +183,13 @@ recommend_models() {
         return 1  # Lightweight tier
     elif [ "$vram_gb" -lt 16 ]; then
         print_success "Moderate VRAM (8-16 GB) - Recommending balanced models"
-        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b, llava2:7b"
+        echo "  Models: llama3.2:3b, llama3.1:8b, phi3:mini, snowflake-arctic-embed2, granite3.2-vision:2b, llava:7b"
         echo "  Total Size: ~18.7 GB"
         echo ""
         return 2  # Balanced tier
     elif [ "$vram_gb" -lt 40 ]; then
         print_success "High VRAM (16-40 GB) - Recommending powerful models"
-        echo "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2, llava2:7b, llava-llama3:13b"
+        echo "  Models: llama3.1:8b, llama3:8b, phi3:medium, snowflake-arctic-embed2, llava:7b, llava:13b"
         echo "  Total Size: ~31.8 GB"
         echo ""
         return 3  # Powerful tier
@@ -230,7 +230,7 @@ pull_auto_models() {
             pull_model "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
             # Vision models for moderate VRAM
             pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
+            pull_model "llava:7b" "LLaVA 1.6 7B - vision-language model (4.7 GB)"
             ;;
         3)  # 16-40 GB VRAM
             print_info "Pulling POWERFUL models for high-end GPU (16-40 GB VRAM)"
@@ -241,8 +241,8 @@ pull_auto_models() {
             pull_model "phi3:medium" "Microsoft Phi-3 Medium (7.9 GB)"
             pull_model "snowflake-arctic-embed2" "Snowflake Arctic Embed 2.0 (1.7 GB)"
             # Vision models for high VRAM
-            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
-            pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
+            pull_model "llava:7b" "LLaVA 1.6 7B - vision-language model (4.7 GB)"
+            pull_model "llava:13b" "LLaVA 1.6 13B - larger multimodal (8 GB)"
             ;;
         4)  # 40+ GB VRAM
             print_info "Pulling ENTERPRISE models for high-end GPU (40+ GB VRAM)"
@@ -269,8 +269,8 @@ pull_auto_models() {
             fi
             # All vision models for enterprise
             pull_model "granite3.2-vision:2b" "IBM Granite Vision - lightweight multimodal (1.5 GB)"
-            pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
-            pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
+            pull_model "llava:7b" "LLaVA 1.6 7B - vision-language model (4.7 GB)"
+            pull_model "llava:13b" "LLaVA 1.6 13B - larger multimodal (8 GB)"
             ;;
     esac
 }
@@ -311,13 +311,12 @@ case "$MODE" in
         ;;
 
     recommended)
-        print_info "Pulling RECOMMENDED models (production-ready, ~9 GB total)"
+        print_info "Pulling RECOMMENDED text models (production-ready, ~9 GB total)"
         echo ""
 
         pull_model "llama3.2:3b" "Meta's balanced model (2 GB)"
         pull_model "llama3.1:8b" "Meta's powerful 8B (4.7 GB)"
         pull_model "phi3:mini" "Microsoft's efficient model (2.3 GB)"
-        pull_model "snowflake-arctic-embed2" "Snowflake embeddings v2 (1.7 GB)"
         ;;
 
     full)
@@ -353,8 +352,8 @@ case "$MODE" in
 
         # Vision/Multimodal Models
         pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B (1.5 GB)"
-        pull_model "llava2:7b" "LLaVA 2 7B - vision-language (4.5 GB)"
-        pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
+        pull_model "llava:7b" "LLaVA 1.6 7B - vision-language (4.7 GB)"
+        pull_model "llava:13b" "LLaVA 1.6 13B - larger multimodal (8 GB)"
         ;;
 
     embeddings)
@@ -370,8 +369,8 @@ case "$MODE" in
         echo ""
 
         pull_model "granite3.2-vision:2b" "IBM Granite Vision 2B - lightweight (1.5 GB)"
-        pull_model "llava2:7b" "LLaVA 2 7B - vision-language model (4.5 GB)"
-        pull_model "llava-llama3:13b" "LLaVA Llama 3 13B - advanced multimodal (8.5 GB)"
+        pull_model "llava:7b" "LLaVA 1.6 7B - vision-language model (4.7 GB)"
+        pull_model "llava:13b" "LLaVA 1.6 13B - larger multimodal (8 GB)"
         ;;
 
     *)

@@ -208,17 +208,17 @@ MODEL_REGISTRY: Dict[str, ModelConfig] = {
         provider="ollama",
         max_context_tokens=128000,
     ),
-    "llava2:7b": ModelConfig(
-        model_id="llava2:7b",
-        display_name="LLaVA 2 7B (Local)",
-        description="Multimodal model fine-tuned for vision-language tasks (4.5GB disk)",
+    "llava:7b": ModelConfig(
+        model_id="llava:7b",
+        display_name="LLaVA 1.6 7B (Local)",
+        description="Vision-language model for image understanding tasks (4.7GB disk)",
         provider="ollama",
         max_context_tokens=128000,
     ),
-    "llava-llama3:13b": ModelConfig(
-        model_id="llava-llama3:13b",
-        display_name="LLaVA Llama 3 13B (Local)",
-        description="Powerful multimodal model combining LLaVA and Llama 3 capabilities (8.5GB disk)",
+    "llava:13b": ModelConfig(
+        model_id="llava:13b",
+        display_name="LLaVA 1.6 13B (Local)",
+        description="Larger multimodal model for advanced image understanding (8GB disk)",
         provider="ollama",
         max_context_tokens=128000,
     ),

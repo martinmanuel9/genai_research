@@ -217,14 +217,12 @@ Write-Host "     ollama serve" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  2. In a NEW PowerShell window, pull models:" -ForegroundColor White
 Write-Host ""
-Write-Host "     # Pull recommended text models (~9 GB)" -ForegroundColor DarkGray
+Write-Host "     # Pull recommended text models for chat/generation (~9 GB)" -ForegroundColor DarkGray
 Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode recommended" -ForegroundColor Gray
 Write-Host ""
 Write-Host "     # Pull vision models for image understanding (~14.5 GB)" -ForegroundColor DarkGray
+Write-Host "     # Includes: granite3.2-vision:2b, llava:7b, llava:13b" -ForegroundColor DarkGray
 Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode vision" -ForegroundColor Gray
-Write-Host ""
-Write-Host "     # Or auto-detect GPU and pull optimal models" -ForegroundColor DarkGray
-Write-Host "     & `"$InstallDir\scripts\pull-ollama-models.ps1`" -Mode auto" -ForegroundColor Gray
 Write-Host ""
 Write-Host "See $InstallDir\INSTALL.md for detailed instructions." -ForegroundColor DarkGray
 

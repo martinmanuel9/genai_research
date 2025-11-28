@@ -50,12 +50,12 @@ VISION_CONFIG = {
             "huggingface_enabled": True,
             "enhanced_local_enabled": True,
             "ollama_url": os.getenv("OLLAMA_URL", "http://ollama:11434"),
-            "ollama_model": os.getenv("OLLAMA_VISION_MODEL", "llava2:7b"),
+            "ollama_model": os.getenv("OLLAMA_VISION_MODEL", "llava:7b"),
             "huggingface_model": os.getenv("HUGGINGFACE_VISION_MODEL", "Salesforce/blip-image-captioning-base"),
             # Ollama vision model mappings
             "ollama_models": {
-                "llava2_7b": "llava2:7b",
-                "llava_llama3_13b": "llava-llama3:13b",
+                "llava_7b": "llava:7b",
+                "llava_13b": "llava:13b",
                 "granite_vision_2b": "granite3.2-vision:2b"
             }
         }
@@ -215,7 +215,7 @@ def describe_with_ollama_vision(image_path: str, model_key: str = None) -> Optio
 
     Args:
         image_path: Path to the image file
-        model_key: Key for the specific Ollama model (e.g., 'llava2_7b', 'llava_llama3_13b', 'granite_vision_2b')
+        model_key: Key for the specific Ollama model (e.g., 'llava_7b', 'llava_13b', 'granite_vision_2b')
                    If None, uses the default model from VISION_CONFIG
     """
     try:
@@ -481,7 +481,7 @@ async def describe_images_for_pages(
                     if d:
                         all_desc["OpenAI"] = d
                 # Handle specific Ollama vision models
-                for ollama_key in ["llava2_7b", "llava_llama3_13b", "granite_vision_2b"]:
+                for ollama_key in ["llava_7b", "llava_13b", "granite_vision_2b"]:
                     if ollama_key in enabled_models and vision_flags.get(ollama_key, False):
                         d = describe_with_ollama_vision(img_path, model_key=ollama_key)
                         if d:
@@ -507,7 +507,7 @@ async def describe_images_for_pages(
                 if "openai" in enabled_models and vision_flags.get("openai", False):
                     d = await describe_with_openai_markitdown(img_path, api_key_override)
                 # Try specific Ollama models
-                for ollama_key in ["llava2_7b", "llava_llama3_13b", "granite_vision_2b"]:
+                for ollama_key in ["llava_7b", "llava_13b", "granite_vision_2b"]:
                     if not d and ollama_key in enabled_models and vision_flags.get(ollama_key, False):
                         d = describe_with_ollama_vision(img_path, model_key=ollama_key)
                 # Legacy ollama support (backward compatibility)

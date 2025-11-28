@@ -43,8 +43,8 @@ VISION_CONFIG = {
     "huggingface_model": os.getenv("HUGGINGFACE_VISION_MODEL", "Salesforce/blip-image-captioning-base"),
     # Ollama vision model mappings
     "ollama_models": {
-        "llava2_7b": "llava2:7b",
-        "llava_llama3_13b": "llava-llama3:13b",
+        "llava_7b": "llava:7b",
+        "llava_13b": "llava:13b",
         "granite_vision_2b": "granite3.2-vision:2b"
     }
 }

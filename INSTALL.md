@@ -333,7 +333,7 @@ ollama serve
 
 **IMPORTANT:** Open a NEW terminal window (keep the server running) to pull models.
 
-**Pull recommended text models (~9 GB):**
+**Pull recommended text models for chat/generation (~9 GB):**
 ```bash
 # Linux
 /opt/genai_research/scripts/pull-ollama-models.sh recommended
@@ -346,6 +346,9 @@ ollama serve
 ```
 
 **Pull vision models for image understanding (~14.5 GB):**
+
+Includes: `granite3.2-vision:2b`, `llava:7b`, `llava:13b`
+
 ```bash
 # Linux
 /opt/genai_research/scripts/pull-ollama-models.sh vision
@@ -357,18 +360,6 @@ ollama serve
 & "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode vision
 ```
 
-**Or auto-detect GPU and pull optimal models:**
-```bash
-# Linux
-/opt/genai_research/scripts/pull-ollama-models.sh auto
-
-# macOS
-/Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh auto
-
-# Windows (in new PowerShell window)
-& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode auto
-```
-
 **Manual model pull (alternative):**
 ```bash
 # Text models
@@ -376,13 +367,10 @@ ollama pull llama3.1:8b          # Recommended general model (4.7 GB)
 ollama pull llama3.2:3b          # Lightweight model (2 GB)
 ollama pull phi3:mini            # Microsoft's efficient model (2.3 GB)
 
-# Embedding model (for RAG)
-ollama pull snowflake-arctic-embed2   # Required for document search (1.7 GB)
-
 # Vision models (for image understanding)
-ollama pull granite3.2-vision:2b      # Lightweight vision (1.5 GB)
-ollama pull llava2:7b                 # Vision-language model (4.5 GB)
-ollama pull llava-llama3:13b          # Advanced multimodal (8.5 GB)
+ollama pull granite3.2-vision:2b      # IBM Granite Vision - lightweight (1.5 GB)
+ollama pull llava:7b                  # LLaVA 1.6 7B - vision-language model (4.7 GB)
+ollama pull llava:13b                 # LLaVA 1.6 13B - larger multimodal (8 GB)
 ```
 
 #### Step 4: Verify Models
