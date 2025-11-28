@@ -22,8 +22,33 @@ from models.session import DebateSession
 import logging
 import tempfile
 import subprocess
+import re
 
 logger = logging.getLogger("WORD_EXPORT_SERVICE")
+
+
+def sanitize_for_xml(text: str) -> str:
+    """
+    Sanitize text to be XML-compatible for Word documents.
+    Removes NULL bytes and control characters that are invalid in XML.
+
+    Valid XML characters per spec:
+    #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
+    """
+    if not text:
+        return ""
+
+    # Pattern to match invalid XML characters
+    # This removes NULL bytes (0x00) and control characters except tab (0x09), newline (0x0A), carriage return (0x0D)
+    invalid_xml_chars = re.compile(
+        r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]'
+    )
+
+    # Replace invalid characters with empty string
+    sanitized = invalid_xml_chars.sub('', text)
+
+    return sanitized
+
 
 class WordExportService:
     """
@@ -365,12 +390,17 @@ class WordExportService:
             doc = Document()
             self._setup_document_styles(doc)
 
-            title_text = reconstructed.get('document_name') or 'Reconstructed Document'
+            title_text = sanitize_for_xml(reconstructed.get('document_name') or 'Reconstructed Document')
             title = doc.add_heading(title_text, 0)
             title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
             # Get reconstructed content with position-aware images
-            content = reconstructed.get('reconstructed_content', '') or ''
+            # Sanitize content to remove invalid XML characters (NULL bytes, control chars)
+            raw_content = reconstructed.get('reconstructed_content', '') or ''
+            content = sanitize_for_xml(raw_content)
+
+            if len(content) != len(raw_content):
+                logger.warning(f"Sanitized {len(raw_content) - len(content)} invalid XML characters from content")
 
             # Debug: Log content stats
             total_lines = len(content.splitlines())
@@ -396,12 +426,12 @@ class WordExportService:
             # Replace each image with a unique placeholder to preserve position
             image_data = []
             for match in re.finditer(image_pattern, content, re.DOTALL):
-                alt_text = match.group(1)
-                image_url = match.group(2)
+                alt_text = sanitize_for_xml(match.group(1).strip())
+                image_url = match.group(2).strip()
                 placeholder = f"<<<IMAGE_{len(image_data)}>>>"
                 image_data.append({
-                    "alt_text": alt_text.strip(),
-                    "image_url": image_url.strip(),
+                    "alt_text": alt_text,
+                    "image_url": image_url,
                     "placeholder": placeholder
                 })
                 logger.info(f"Found image {len(image_data)}: {alt_text[:50]}...")
