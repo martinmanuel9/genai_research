@@ -22,6 +22,12 @@ services:
       - ./data/postgres:/var/lib/postgresql/backup
     networks:
       - ai_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   chromadb:
     image: chromadb/chroma:0.5.23
     container_name: chromadb
@@ -68,12 +74,15 @@ services:
     environment:
       - ANONYMIZED_TELEMETRY=False
     depends_on:
-      - base-poetry-deps
-      - postgres
-      - chromadb
+      base-poetry-deps:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
       # ollama removed - using native Ollama on host at http://127.0.0.1:11434
     extra_hosts:
-      - "host.docker.internal:172.19.0.1"  # ai_network bridge IP - allows access to host's Ollama
+      - "host.docker.internal:host-gateway"  # Docker's special host-gateway - allows access to host's Ollama
     volumes:
       - huggingface_cache:/app/huggingface_cache
       - ./data/huggingface_cache:/app/cache_backup
@@ -95,7 +104,7 @@ services:
     depends_on:
       - base-poetry-deps
     extra_hosts:
-      - "host.docker.internal:172.19.0.1"  # ai_network bridge IP - allows access to host's Ollama
+      - "host.docker.internal:host-gateway"  # Docker's special host-gateway - allows access to host's Ollama
     volumes:
       - ./src/llm_config:/app/llm_config:ro
       - ./stored_images:/app/stored_images:ro
@@ -134,13 +143,17 @@ services:
       - CELERY_REDIS_DB=1
       - ANONYMIZED_TELEMETRY=False
     depends_on:
-      - base-poetry-deps
-      - postgres
-      - chromadb
-      - redis
+      base-poetry-deps:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
       # ollama removed - using native Ollama on host
     extra_hosts:
-      - "host.docker.internal:172.19.0.1"  # ai_network bridge IP - allows access to host's Ollama
+      - "host.docker.internal:host-gateway"  # Docker's special host-gateway - allows access to host's Ollama
     volumes:
       - huggingface_cache:/app/huggingface_cache
       - ./data/huggingface_cache:/app/cache_backup
