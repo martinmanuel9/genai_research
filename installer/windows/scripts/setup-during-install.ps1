@@ -471,91 +471,31 @@ if (-not $ollamaInstalled) {
             Write-LogSuccess "Ollama installation detected!"
         } else {
             Write-LogWarning "Ollama not detected yet - it may require a system restart"
-            Write-Log "After restarting, use Start Menu -> GenAI Research -> Download Models"
+            Write-Log "After restarting, use Start Menu, then GenAI Research, then Download Models"
         }
     }
 }
 
-# Now prompt for model selection (whether Ollama was just installed or already existed)
+# Ollama model download instructions (manual process)
 if ($ollamaInstalled) {
     Write-LogSuccess "Ollama is installed"
-
-    # Check if Ollama service is running
-    $ollamaRunning = $false
-    try {
-        $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
-        $ollamaRunning = $true
-    } catch {
-        Write-Log "Starting Ollama service..."
-        Start-Process "ollama" -ArgumentList "serve" -WindowStyle Hidden
-        Start-Sleep -Seconds 5
-        try {
-            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
-            $ollamaRunning = $true
-        } catch {
-            Write-LogWarning "Could not start Ollama service - it may need a system restart"
-        }
-    }
-
-    if ($ollamaRunning) {
-        Write-LogSuccess "Ollama service is running"
-    }
-
-    # Always show model selection menu
     Write-Host ""
-    Write-Host "Model download options:" -ForegroundColor Yellow
-    Write-Host "  1) Auto   - Auto-detect GPU and pull appropriate models"
-    Write-Host "  2) Quick  - Lightweight models only (~6.6 GB)"
-    Write-Host "  3) Recommended - Production-ready models (~9 GB)"
-    Write-Host "  4) Vision - Vision/multimodal models only (~11.5 GB)"
-    Write-Host "  5) Full   - All models including 70B variants (100+ GB)"
-    Write-Host "  6) Skip   - Download models later"
+    Write-Log "To download AI models, open a NEW PowerShell or Command Prompt window and run:"
     Write-Host ""
-    Write-Host "Select option [1-6] (Enter for Auto): " -ForegroundColor Yellow -NoNewline
-    $modelChoice = Read-Host
-
-    $pullMode = switch ($modelChoice.Trim()) {
-        "1" { "auto" }
-        "2" { "quick" }
-        "3" { "recommended" }
-        "4" { "vision" }
-        "5" { "full" }
-        "6" { "" }
-        "" { "auto" }
-        default { "auto" }
-    }
-
-    if ($pullMode) {
-        if ($ollamaRunning) {
-            Write-Host ""
-            Write-Log "Pulling models with mode: $pullMode" -Color Cyan
-            Write-Log "This may take several minutes depending on your internet connection..."
-            Write-Host ""
-
-            $pullScript = Join-Path $InstallDir "scripts\pull-ollama-models.ps1"
-            if (Test-Path $pullScript) {
-                & $pullScript -Mode $pullMode
-                Write-LogSuccess "Model pull complete"
-            } else {
-                Write-LogWarning "Pull script not found at: $pullScript"
-                Write-Log "You can pull models manually later using: ollama pull <model-name>"
-            }
-        } else {
-            Write-LogWarning "Ollama service is not running - cannot pull models now"
-            Write-Log "After restarting your computer, use:"
-            Write-Log "  Start Menu -> GenAI Research -> Download Models"
-        }
-    } else {
-        Write-Log "Model download skipped"
-        Write-Log "You can download models later from:"
-        Write-Log "  Start Menu -> GenAI Research -> Download Models"
-    }
+    Write-Host "  RECOMMENDED MODELS:" -ForegroundColor Yellow
+    Write-Host "    ollama pull llama3.2" -ForegroundColor Cyan
+    Write-Host "    ollama pull nomic-embed-text" -ForegroundColor Cyan
+    Write-Host "    ollama pull qwen2.5:7b" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  VISION MODELS (for document/image analysis):" -ForegroundColor Yellow
+    Write-Host "    ollama pull llama3.2-vision" -ForegroundColor Cyan
+    Write-Host "    ollama pull llava:7b" -ForegroundColor Cyan
+    Write-Host "    ollama pull minicpm-v" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Log "You can download these models now in another window, or after installation completes."
+    Write-Log "The application will work with any models you have downloaded."
 } else {
-    Write-Log "Ollama not installed - skipping model configuration"
-    Write-Log "To set up local AI models later:"
-    Write-Log "  1. Download Ollama from: https://ollama.com/download/windows"
-    Write-Log "  2. Install and restart your computer"
-    Write-Log "  3. Use Start Menu -> GenAI Research -> Download Models"
+    Write-Log "Ollama not detected - you can install it later from: https://ollama.com/download/windows"
 }
 
 Write-LogSuccess "Step 4/7 Complete"
