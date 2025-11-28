@@ -12,6 +12,21 @@ from config.settings import config
 from app_lib.api.client import api_client
 
 
+def _display_citations(formatted_citations: str = ""):
+    """
+    Display formatted citations from the RAG service.
+
+    Args:
+        formatted_citations: Pre-formatted citation text from RAG service
+    """
+    if not formatted_citations:
+        return
+
+    st.divider()
+    with st.expander("Sources and Citations", expanded=True):
+        st.markdown(formatted_citations)
+
+
 def agent_set_pipeline():
     """
     Agent Set Pipeline - Run agent pipelines on direct text input
@@ -277,7 +292,8 @@ def _display_pipeline_result(result: dict):
     st.markdown("### Pipeline Results")
 
     # Summary metrics
-    col1, col2, col3, col4 = st.columns(4)
+    rag_used = result.get("rag_context_used", False)
+    col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.metric("Sections", result.get("total_sections", 0))
@@ -288,6 +304,11 @@ def _display_pipeline_result(result: dict):
     with col4:
         processing_time = result.get("processing_time", 0)
         st.metric("Processing Time", f"{processing_time:.1f}s")
+    with col5:
+        st.metric("RAG Context", "Yes" if rag_used else "No")
+
+    if rag_used:
+        st.caption(f"RAG Collection: {result.get('rag_collection', 'N/A')}")
 
     st.markdown("---")
 
@@ -307,6 +328,12 @@ def _display_pipeline_result(result: dict):
     # Show consolidated output in expander
     with st.expander("View Full Output", expanded=True):
         st.markdown(consolidated)
+
+    # Display citations if RAG was used and citations are available
+    if rag_used:
+        formatted_citations = result.get("formatted_citations", "")
+        if formatted_citations:
+            _display_citations(formatted_citations)
 
     # Section-by-section results
     section_results = result.get("section_results", [])

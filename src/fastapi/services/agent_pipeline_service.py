@@ -33,6 +33,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from services.llm_invoker import LLMInvoker
 from services.llm_service import LLMService
+from services.rag_service import RAGService
 from repositories.agent_set_repository import AgentSetRepository
 from repositories.test_plan_agent_repository import TestPlanAgentRepository
 from core.database import get_db
@@ -91,6 +92,8 @@ class PipelineResult:
     agent_set_id: int
     rag_context_used: bool = False
     rag_collection: Optional[str] = None
+    formatted_citations: str = ""  # Formatted citations for explainability
+    rag_metadata: List[Dict[str, Any]] = field(default_factory=list)  # Raw metadata for citations
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -102,8 +105,9 @@ class AgentPipelineService:
     a configured agent set pipeline without requiring ChromaDB documents.
     """
 
-    def __init__(self, llm_service: LLMService = None):
+    def __init__(self, llm_service: LLMService = None, rag_service: RAGService = None):
         self.llm_service = llm_service
+        self.rag_service = rag_service or RAGService()
 
         # Redis setup for pipeline tracking
         redis_host = os.getenv("REDIS_HOST", "redis")
@@ -177,11 +181,13 @@ class AgentPipelineService:
         # RAG context will be prepended to text_input
         rag_context = ""
         rag_context_used = False
+        formatted_citations = ""
+        rag_metadata = []
 
         try:
             # 0. Fetch RAG context if enabled
             if use_rag and rag_collection:
-                rag_context = self._fetch_rag_context(
+                rag_context, formatted_citations, rag_metadata = self._fetch_rag_context(
                     query=text_input,
                     collection_name=rag_collection,
                     document_id=rag_document_id,
@@ -190,6 +196,7 @@ class AgentPipelineService:
                 if rag_context:
                     rag_context_used = True
                     logger.info(f"RAG context retrieved: {len(rag_context)} chars")
+                    logger.info(f"Citations generated: {len(formatted_citations)} chars")
 
             # 1. Load agent set configuration
             agent_set_config = self._load_agent_set_configuration(agent_set_id)
@@ -276,7 +283,9 @@ class AgentPipelineService:
                 agent_set_name=agent_set_name,
                 agent_set_id=agent_set_id,
                 rag_context_used=rag_context_used,
-                rag_collection=rag_collection if rag_context_used else None
+                rag_collection=rag_collection if rag_context_used else None,
+                formatted_citations=formatted_citations,
+                rag_metadata=rag_metadata
             )
 
         except Exception as e:
@@ -314,7 +323,7 @@ class AgentPipelineService:
         collection_name: str,
         document_id: Optional[str] = None,
         top_k: int = 5
-    ) -> str:
+    ) -> tuple[str, str, List[Dict[str, Any]]]:
         """
         Fetch RAG context from ChromaDB for the given query.
 
@@ -325,60 +334,55 @@ class AgentPipelineService:
             top_k: Number of top results to retrieve
 
         Returns:
-            Formatted context string from relevant documents
+            Tuple of (context_string, formatted_citations, metadata_list)
         """
         try:
-            # Use the RAG query endpoint
-            payload = {
-                "query": query,
-                "collection_name": collection_name,
-                "top_k": top_k
-            }
-
+            # Build filter for document_id if specified
+            where_filter = None
             if document_id:
-                payload["document_id"] = document_id
+                where_filter = {"document_id": document_id}
 
-            # Try using the internal RAG service endpoint
-            response = requests.post(
-                f"{self.fastapi_url}/api/rag/query",
-                json=payload,
-                timeout=60
+            # Use RAGService directly to get documents with full metadata
+            docs, found, metadata_list = self.rag_service.get_relevant_documents(
+                query=query,
+                collection_name=collection_name,
+                top_k=top_k,
+                where=where_filter,
+                include_metadata=True
             )
 
-            if response.ok:
-                data = response.json()
-                documents = data.get("documents", [])
-                metadatas = data.get("metadatas", [])
+            if not found or not docs:
+                logger.info("No RAG context found for query")
+                return "", "", []
 
-                if not documents:
-                    logger.info("No RAG context found for query")
-                    return ""
+            # Format the context for use in prompts
+            context_parts = []
+            for idx, (doc, meta) in enumerate(zip(docs, metadata_list or [{}] * len(docs)), 1):
+                source = ""
+                meta_dict = meta.get('metadata', {}) if isinstance(meta, dict) else {}
+                if meta_dict:
+                    doc_name = meta_dict.get("document_name", meta_dict.get("source", "Unknown"))
+                    page = meta_dict.get("page", meta_dict.get("page_number", ""))
+                    source = f"[Source: {doc_name}"
+                    if page:
+                        source += f", Page {page}"
+                    source += "]"
 
-                # Format the context
-                context_parts = []
-                for idx, (doc, meta) in enumerate(zip(documents, metadatas or [{}] * len(documents)), 1):
-                    source = ""
-                    if meta:
-                        doc_name = meta.get("document_name", meta.get("source", "Unknown"))
-                        page = meta.get("page", meta.get("page_number", ""))
-                        source = f"[Source: {doc_name}"
-                        if page:
-                            source += f", Page {page}"
-                        source += "]"
+                context_parts.append(f"### Context {idx} {source}\n{doc}")
 
-                    context_parts.append(f"### Context {idx} {source}\n{doc}")
+            context = "\n\n".join(context_parts)
+            logger.info(f"Retrieved {len(docs)} RAG context chunks")
 
-                context = "\n\n".join(context_parts)
-                logger.info(f"Retrieved {len(documents)} RAG context chunks")
-                return context
+            # Generate formatted citations using RAGService's citation formatter
+            formatted_citations = self.rag_service._format_document_citations(metadata_list)
 
-            else:
-                logger.warning(f"RAG query failed: {response.status_code} - {response.text}")
-                return ""
+            return context, formatted_citations, metadata_list
 
         except Exception as e:
             logger.error(f"Error fetching RAG context: {e}")
-            return ""
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return "", "", []
 
     def _load_agent_set_configuration(self, agent_set_id: int) -> Optional[Dict[str, Any]]:
         """Load agent set configuration from database"""

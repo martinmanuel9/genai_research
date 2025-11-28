@@ -464,3 +464,9 @@ def _display_pipeline_result_direct_chat(result: dict):
     with st.expander("View Full Output", expanded=True):
         st.markdown(consolidated)
 
+    # Display citations if RAG was used and citations are available
+    if rag_used:
+        formatted_citations = result.get("formatted_citations", "")
+        if formatted_citations:
+            display_citations(formatted_citations)
+

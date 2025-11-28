@@ -126,6 +126,7 @@ class PipelineResultResponse(BaseModel):
     agent_set_id: int
     rag_context_used: bool = False
     rag_collection: Optional[str] = None
+    formatted_citations: str = ""  # Formatted citations for explainability when RAG is used
     created_at: str
 
 
@@ -183,6 +184,7 @@ def _convert_pipeline_result_to_response(result: PipelineResult) -> PipelineResu
         agent_set_id=result.agent_set_id,
         rag_context_used=result.rag_context_used,
         rag_collection=result.rag_collection,
+        formatted_citations=result.formatted_citations,
         created_at=result.created_at
     )
 
@@ -238,6 +240,7 @@ def _run_pipeline_background(
             "agent_set_id": str(result.agent_set_id),
             "rag_context_used": str(result.rag_context_used),
             "rag_collection": result.rag_collection or "",
+            "formatted_citations": result.formatted_citations or "",
             "created_at": result.created_at,
             # Store full section results as JSON
             "section_results_json": json.dumps([
@@ -553,6 +556,9 @@ async def get_pipeline_result(pipeline_id: str):
             "processing_time": float(result.get("processing_time", 0)),
             "agent_set_name": result.get("agent_set_name", ""),
             "agent_set_id": int(result.get("agent_set_id", 0)),
+            "rag_context_used": result.get("rag_context_used", "False") == "True",
+            "rag_collection": result.get("rag_collection", "") or None,
+            "formatted_citations": result.get("formatted_citations", ""),
             "created_at": result.get("created_at", "")
         }
 
