@@ -333,7 +333,31 @@ ollama serve
 
 **IMPORTANT:** Open a NEW terminal window (keep the server running) to pull models.
 
-**Auto-detect GPU and pull optimal models:**
+**Pull recommended text models (~9 GB):**
+```bash
+# Linux
+/opt/genai_research/scripts/pull-ollama-models.sh recommended
+
+# macOS
+/Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh recommended
+
+# Windows (in new PowerShell window)
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode recommended
+```
+
+**Pull vision models for image understanding (~14.5 GB):**
+```bash
+# Linux
+/opt/genai_research/scripts/pull-ollama-models.sh vision
+
+# macOS
+/Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh vision
+
+# Windows (in new PowerShell window)
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode vision
+```
+
+**Or auto-detect GPU and pull optimal models:**
 ```bash
 # Linux
 /opt/genai_research/scripts/pull-ollama-models.sh auto
@@ -345,7 +369,7 @@ ollama serve
 & "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode auto
 ```
 
-**Or manually pull specific models:**
+**Manual model pull (alternative):**
 ```bash
 # Text models
 ollama pull llama3.1:8b          # Recommended general model (4.7 GB)

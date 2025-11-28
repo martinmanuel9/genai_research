@@ -70,15 +70,17 @@ ollama serve &
 ### 3. Pull Models (in a new terminal)
 
 ```bash
+# Pull recommended text models (~9 GB)
 # Linux
-/opt/genai_research/scripts/pull-ollama-models.sh auto
+/opt/genai_research/scripts/pull-ollama-models.sh recommended
+# Windows
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode recommended
 
-# Windows (PowerShell)
-& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode auto
-
-# Or pull individual models
-ollama pull llama3.1:8b
-ollama pull granite3.2-vision:2b
+# Pull vision models for image understanding (~14.5 GB)
+# Linux
+/opt/genai_research/scripts/pull-ollama-models.sh vision
+# Windows
+& "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode vision
 ```
 
 See [INSTALL.md](INSTALL.md) for detailed Ollama setup instructions.
