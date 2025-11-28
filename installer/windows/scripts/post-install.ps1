@@ -226,29 +226,42 @@ if (-not $ollamaInstalled) {
     if ($pullMode) {
         Write-Host ""
 
-        # Wait for Ollama service to be ready before pulling models (GPU init can take 2+ minutes)
-        Write-Log "Waiting for Ollama service to be ready (this may take up to 2 minutes)..."
-        $maxAttempts = 24
+        # Check if Ollama is already running
         $ollamaReady = $false
+        try {
+            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 3 -ErrorAction Stop
+            $ollamaReady = $true
+            Write-LogSuccess "Ollama is already running!"
+        } catch {
+            Write-Log "Ollama is not running. Starting Ollama server..."
 
-        for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-            try {
-                $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
-                $ollamaReady = $true
-                Write-LogSuccess "Ollama is ready!"
-                break
-            } catch {
-                # Show progress every 5 attempts
-                if ($attempt % 5 -eq 0) {
-                    Write-Host "  Still waiting... ($($attempt * 5) seconds elapsed)" -ForegroundColor DarkGray
-                }
+            # Start ollama serve in background
+            $env:OLLAMA_HOST = "0.0.0.0:11434"
+            Start-Process -FilePath "ollama" -ArgumentList "serve" -WindowStyle Hidden
+
+            # Wait for Ollama to start (GPU init can take time)
+            Write-Log "Waiting for Ollama to initialize (this may take 30-60 seconds)..."
+            $maxAttempts = 24
+
+            for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
                 Start-Sleep -Seconds 5
+                try {
+                    $response = Invoke-RestMethod -Uri "http://localhost:11434/api/tags" -Method Get -TimeoutSec 5 -ErrorAction Stop
+                    $ollamaReady = $true
+                    Write-LogSuccess "Ollama is ready!"
+                    break
+                } catch {
+                    # Show progress every 5 attempts
+                    if ($attempt % 5 -eq 0) {
+                        Write-Host "  Still initializing... ($($attempt * 5) seconds elapsed)" -ForegroundColor DarkGray
+                    }
+                }
             }
         }
 
         if (-not $ollamaReady) {
-            Write-LogWarning "Ollama service is not responding after 2 minutes"
-            Write-Log "You can pull models manually later with:"
+            Write-LogWarning "Ollama failed to start after 2 minutes"
+            Write-Log "Try starting Ollama manually from the Start Menu, then run:"
             Write-Host "  $InstallDir\scripts\pull-ollama-models.ps1 -Mode $pullMode" -ForegroundColor Yellow
         } else {
             Write-Log "Running model pull script with mode: $pullMode"

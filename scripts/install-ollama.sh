@@ -63,13 +63,23 @@ sudo tee /etc/systemd/system/ollama.service.d/override.conf > /dev/null <<'EOF'
 Environment="OLLAMA_HOST=0.0.0.0:11434"
 EOF
 
-# Reload and restart
+# Reload systemd and enable service for future boots
 sudo systemctl daemon-reload
 sudo systemctl enable ollama
-sudo systemctl restart ollama
 
-# Wait for Ollama to start with extended retry logic (GPU initialization can take 2+ minutes)
-print_info "Waiting for Ollama service to start (this may take up to 2 minutes on first run with GPU)..."
+# Stop any existing ollama processes to ensure clean start
+print_info "Stopping any existing Ollama processes..."
+sudo systemctl stop ollama 2>/dev/null || true
+pkill -f "ollama serve" 2>/dev/null || true
+sleep 2
+
+# Start ollama serve directly (more reliable than systemd on first install)
+print_info "Starting Ollama server..."
+OLLAMA_HOST=0.0.0.0:11434 nohup ollama serve > /tmp/ollama-install.log 2>&1 &
+OLLAMA_PID=$!
+
+# Wait for Ollama to start
+print_info "Waiting for Ollama to initialize (this may take 30-60 seconds on first run)..."
 MAX_RETRIES=24
 RETRY_INTERVAL=5
 OLLAMA_READY=false
@@ -80,9 +90,16 @@ for i in $(seq 1 $MAX_RETRIES); do
         break
     fi
 
+    # Check if process is still running
+    if ! kill -0 $OLLAMA_PID 2>/dev/null; then
+        print_error "Ollama process died unexpectedly"
+        print_info "Check log: cat /tmp/ollama-install.log"
+        break
+    fi
+
     # Show progress every 5 attempts
     if [ $((i % 5)) -eq 0 ]; then
-        print_info "Still waiting for Ollama... ($((i * RETRY_INTERVAL)) seconds elapsed)"
+        print_info "Still initializing... ($((i * RETRY_INTERVAL)) seconds elapsed)"
     else
         echo -n "."
     fi
@@ -90,65 +107,41 @@ for i in $(seq 1 $MAX_RETRIES); do
 done
 echo ""
 
-# Verify installation
+# Verify Ollama is running
 if [ "$OLLAMA_READY" = true ]; then
     print_success "Ollama installed and running successfully!"
-else
-    print_warning "Ollama service is slow to start. Attempting recovery..."
 
-    # Check if the service is at least active
-    if systemctl is-active --quiet ollama; then
-        print_info "Service is active but not responding. Trying to restart..."
-        sudo systemctl restart ollama
+    # Now try to set up systemd to manage it going forward
+    print_info "Configuring systemd service for auto-start on boot..."
 
-        # Give it one more extended wait
-        print_info "Waiting additional 30 seconds after restart..."
-        for i in $(seq 1 6); do
-            sleep 5
-            if curl -s http://localhost:11434/api/tags &> /dev/null; then
-                OLLAMA_READY=true
-                print_success "Ollama is now responding!"
-                break
-            fi
-            echo -n "."
-        done
-        echo ""
-    fi
+    # Kill manual process and let systemd take over
+    kill $OLLAMA_PID 2>/dev/null || true
+    sleep 2
 
-    # If still not ready, try running ollama serve manually in background
-    if [ "$OLLAMA_READY" != true ]; then
-        print_warning "Systemd service not responding. Trying manual start..."
+    # Start via systemd
+    sudo systemctl start ollama
 
-        # Kill any existing ollama processes
-        pkill -f "ollama serve" 2>/dev/null || true
-
-        # Start ollama serve in background
+    # Verify systemd started it
+    sleep 3
+    if curl -s http://localhost:11434/api/tags &> /dev/null; then
+        print_success "Ollama systemd service is running"
+    else
+        # Systemd didn't work, restart manual process
+        print_warning "Systemd service not responding, keeping manual mode"
         OLLAMA_HOST=0.0.0.0:11434 nohup ollama serve > /tmp/ollama.log 2>&1 &
-
-        # Wait for manual start
-        print_info "Waiting for manual Ollama start..."
-        for i in $(seq 1 12); do
-            sleep 5
-            if curl -s http://localhost:11434/api/tags &> /dev/null; then
-                OLLAMA_READY=true
-                print_success "Ollama started successfully (manual mode)!"
-                print_warning "Note: Ollama is running manually. To use systemd service, reboot the system."
-                break
-            fi
-            echo -n "."
-        done
-        echo ""
+        sleep 3
+        if curl -s http://localhost:11434/api/tags &> /dev/null; then
+            print_success "Ollama running in manual mode"
+            print_info "Note: After reboot, you may need to run: ollama serve"
+        fi
     fi
-
-    if [ "$OLLAMA_READY" != true ]; then
-        print_error "Ollama failed to start after all attempts"
-        print_info "Check logs with: sudo journalctl -u ollama -n 50"
-        print_info "Or check manual log: cat /tmp/ollama.log"
-        print_info ""
-        print_info "You may need to reboot and try again, or start Ollama manually:"
-        echo "     ollama serve"
-        exit 1
-    fi
+else
+    print_error "Ollama failed to start"
+    print_info "Check log: cat /tmp/ollama-install.log"
+    print_info ""
+    print_info "Try starting manually:"
+    echo "     ollama serve"
+    exit 1
 fi
 
 echo ""
