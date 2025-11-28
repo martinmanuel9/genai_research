@@ -482,15 +482,21 @@ if ($ollamaInstalled) {
     Write-Host ""
     Write-Log "To download AI models, open a NEW PowerShell or Command Prompt window and run:"
     Write-Host ""
-    Write-Host "  RECOMMENDED MODELS:" -ForegroundColor Yellow
-    Write-Host "    ollama pull llama3.2" -ForegroundColor Cyan
-    Write-Host "    ollama pull nomic-embed-text" -ForegroundColor Cyan
-    Write-Host "    ollama pull qwen2.5:7b" -ForegroundColor Cyan
+    Write-Host "  RECOMMENDED MODELS (Text):" -ForegroundColor Yellow
+    Write-Host "    ollama pull llama3.2:3b" -ForegroundColor Cyan
+    Write-Host "    ollama pull llama3.1:8b" -ForegroundColor Cyan
+    Write-Host "    ollama pull phi3:mini" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  EMBEDDING MODELS (Required for RAG):" -ForegroundColor Yellow
+    Write-Host "    ollama pull snowflake-arctic-embed2" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  VISION MODELS (for document/image analysis):" -ForegroundColor Yellow
-    Write-Host "    ollama pull llama3.2-vision" -ForegroundColor Cyan
+    Write-Host "    ollama pull granite3.2-vision:2b" -ForegroundColor Cyan
     Write-Host "    ollama pull llava:7b" -ForegroundColor Cyan
-    Write-Host "    ollama pull minicpm-v" -ForegroundColor Cyan
+    Write-Host "    ollama pull llava:13b" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "  Or run the auto-pull script after installation:" -ForegroundColor Yellow
+    Write-Host "    .\scripts\pull-ollama-models.ps1 auto" -ForegroundColor Cyan
     Write-Host ""
     Write-Log "You can download these models now in another window, or after installation completes."
     Write-Log "The application will work with any models you have downloaded."
