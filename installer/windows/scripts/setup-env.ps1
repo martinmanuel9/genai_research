@@ -47,29 +47,17 @@ Write-Host "         GenAI Research - Environment Setup"
 Write-Host "═══════════════════════════════════════════════════════════════"
 Write-Host ""
 
-# Check if .env already exists
-if (Test-Path $EnvFile) {
-    Write-Warning ".env file already exists"
-    $option = Read-Host "Do you want to reconfigure? (y/N)"
-
-    if ($option -ne "y" -and $option -ne "Y") {
-        Write-Info "Configuration cancelled - keeping existing .env"
-        exit 0
+# Create .env from template if it doesn't exist, or use existing
+if (-not (Test-Path $EnvFile)) {
+    if (Test-Path $EnvTemplate) {
+        Copy-Item $EnvTemplate $EnvFile -Force
+        Write-Success "Created .env from template with default settings"
+    } else {
+        Write-ErrorMsg "Template file not found: $EnvTemplate"
+        exit 1
     }
-
-    # Backup existing
-    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    Copy-Item $EnvFile "$EnvFile.backup.$timestamp"
-    Write-Info "Existing configuration backed up"
-}
-
-# Start with template
-if (Test-Path $EnvTemplate) {
-    Copy-Item $EnvTemplate $EnvFile -Force
-    Write-Success "Created .env from template with default settings"
 } else {
-    Write-ErrorMsg "Template file not found: $EnvTemplate"
-    exit 1
+    Write-Info "Using existing .env file"
 }
 
 Write-Header "API Keys Configuration"
@@ -84,7 +72,7 @@ if ($openaiKey) {
     Write-Success "OpenAI API key configured"
 } else {
     Write-Warning "OpenAI API key not configured"
-    Write-Info "You can use local Ollama models instead, or add the key later"
+    Write-Info "You can use local Ollama models instead, or add the key later to .env"
 }
 
 Write-Host ""
@@ -99,7 +87,7 @@ if ($langsmithKey) {
     (Get-Content $EnvFile) -replace '^LANGSMITH_TRACING=.*', 'LANGSMITH_TRACING=true' | Set-Content $EnvFile
     Write-Success "LangSmith tracing enabled"
 } else {
-    Write-Info "LangSmith tracing disabled (can be enabled later)"
+    Write-Info "LangSmith tracing disabled (can be enabled later in .env)"
 }
 
 Write-Header "Ollama (Local LLM Support)"

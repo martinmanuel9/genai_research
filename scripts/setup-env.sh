@@ -31,27 +31,17 @@ echo "         GenAI Research - Environment Setup"
 echo "═══════════════════════════════════════════════════════════════"
 echo ""
 
-# Check if .env already exists
-if [ -f "$ENV_FILE" ]; then
-    print_warning ".env file already exists"
-    read -p "Do you want to reconfigure? (y/N): " -n 1 -r
-    echo ""
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        print_info "Configuration cancelled - keeping existing .env"
-        exit 0
+# Create .env from template if it doesn't exist, or update existing
+if [ ! -f "$ENV_FILE" ]; then
+    if [ -f "$ENV_TEMPLATE" ]; then
+        cp "$ENV_TEMPLATE" "$ENV_FILE"
+        print_success "Created .env from template with default settings"
+    else
+        print_error "Template file not found: $ENV_TEMPLATE"
+        exit 1
     fi
-    # Backup existing
-    cp "$ENV_FILE" "$ENV_FILE.backup.$(date +%Y%m%d_%H%M%S)"
-    print_info "Existing configuration backed up"
-fi
-
-# Start with template
-if [ -f "$ENV_TEMPLATE" ]; then
-    cp "$ENV_TEMPLATE" "$ENV_FILE"
-    print_success "Created .env from template with default settings"
 else
-    print_error "Template file not found: $ENV_TEMPLATE"
-    exit 1
+    print_info "Using existing .env file"
 fi
 
 echo ""
@@ -68,7 +58,7 @@ if [ -n "$OPENAI_KEY" ]; then
     print_success "OpenAI API key configured"
 else
     print_warning "OpenAI API key not configured"
-    print_info "You can use local Ollama models instead, or add the key later"
+    print_info "You can use local Ollama models instead, or add the key later to .env"
 fi
 
 echo ""
@@ -83,7 +73,7 @@ if [ -n "$LANGSMITH_KEY" ]; then
     sed -i "s/^LANGSMITH_TRACING=.*/LANGSMITH_TRACING=true/" "$ENV_FILE"
     print_success "LangSmith tracing enabled"
 else
-    print_info "LangSmith tracing disabled (can be enabled later)"
+    print_info "LangSmith tracing disabled (can be enabled later in .env)"
 fi
 
 echo ""
