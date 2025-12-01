@@ -5,7 +5,7 @@ All notable changes to GenAI Research will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.16] - 2025-11-26
+## [0.0.46] - 2025-12-01
 
 ### Added
 - Initial release of Verification GenAI
@@ -26,7 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated installation to automatically install the software
 - Fix on managing Agents and Agent Sets
 - Installer allows for env input
-- Attempts to fix the poetry toml and lock files
+- Fix the poetry toml and lock files
+- Fix to include citations within the direct chat
 
 ### Features
 - **Test Plan Generation**: Multi-agent Actor-Critic system for extracting requirements

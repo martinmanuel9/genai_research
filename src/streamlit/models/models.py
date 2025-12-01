@@ -139,6 +139,7 @@ class ChatResponse(BaseModel):
     response_time_ms: Optional[int] = None
     model_used: Optional[str] = None
     sources: Optional[List[Dict[str, Any]]] = None
+    formatted_citations: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
     class Config:
