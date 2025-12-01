@@ -113,6 +113,7 @@ services:
       - ./src/streamlit/services:/app/services
       - ./src/streamlit/app_lib:/app/app_lib
       - ./src/streamlit/config:/app/config
+      - ./src/streamlit/models:/app/models
     networks:
       - ai_network
 

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Installer allows for env input
 - Fix the poetry toml and lock files
 - Fix to include citations within the direct chat
+- Fix persistent models within docker-compose.yml so that the models folder is found within start of install
 
 ### Features
 - **Test Plan Generation**: Multi-agent Actor-Critic system for extracting requirements
