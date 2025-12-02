@@ -1,13 +1,35 @@
 from typing import Generator
 from functools import lru_cache
+from contextlib import contextmanager
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
-from core.database import get_db
+from core.database import get_db, SessionLocal
 from core.config import get_settings, Settings
-import logging 
+import logging
 
 logger = logging.getLogger('CORE_DEPENDENCIES')
+
+
+@contextmanager
+def get_db_context() -> Generator[Session, None, None]:
+    """
+    Context manager for database sessions in background tasks.
+
+    Use this when you need a database session outside of FastAPI's
+    dependency injection (e.g., in background tasks).
+
+    Example:
+        with get_db_context() as db:
+            chat_entry = ChatHistory(...)
+            db.add(chat_entry)
+            db.commit()
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # ============================================================================
 # Configuration Dependencies

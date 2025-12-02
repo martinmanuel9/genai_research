@@ -40,14 +40,18 @@ async def rag_debate_sequence(
     rag_service: RAGService = Depends(get_rag_service),
     db: Session = Depends(get_db)):
     try:
-        session_id, chain = rag_service.run_rag_debate_sequence(  
+        session_id, chain, formatted_citations = rag_service.run_rag_debate_sequence(
             db=db,
             session_id=request.session_id,
             agent_ids=request.agent_ids,
             query_text=request.query_text,
             collection_name=request.collection_name
         )
-        return {"session_id": session_id, "debate_chain": chain}
+        return {
+            "session_id": session_id,
+            "debate_chain": chain,
+            "formatted_citations": formatted_citations
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

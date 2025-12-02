@@ -3,6 +3,7 @@ from config.settings import config
 from app_lib.api.client import api_client
 from services.chromadb_service import chromadb_service
 from components.upload_documents import browse_documents, render_upload_component
+from components.shared.pipeline_components import display_citations
 
 # Use centralized config for endpoints
 FASTAPI = config.endpoints.api
@@ -267,6 +268,11 @@ def multi_agent_sequence_debate(agents, agent_choices, collections):
                         # Show response time
                         if "response_time_ms" in result:
                             st.caption(f"Total debate time: {result['response_time_ms']/1000:.2f}s")
+
+                        # Display citations if available (RAG mode)
+                        formatted_citations = result.get("formatted_citations", "")
+                        if formatted_citations:
+                            display_citations(formatted_citations)
 
                         # Word Export Section
                         st.markdown("---")

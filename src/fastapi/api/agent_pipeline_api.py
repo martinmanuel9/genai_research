@@ -21,9 +21,10 @@ import os
 from datetime import datetime
 import json
 
-from core.dependencies import get_db
+from core.dependencies import get_db, get_chat_repository
 from services.agent_pipeline_service import AgentPipelineService, PipelineResult
 from repositories.agent_set_repository import AgentSetRepository
+from repositories.chat_repository import ChatRepository
 
 logger = logging.getLogger("AGENT_PIPELINE_API")
 
@@ -199,7 +200,8 @@ def _run_pipeline_background(
     use_rag: bool = False,
     rag_collection: Optional[str] = None,
     rag_document_id: Optional[str] = None,
-    rag_top_k: int = 5
+    rag_top_k: int = 5,
+    agent_set_name: str = ""
 ):
     """Background task for running the pipeline"""
     try:
@@ -291,6 +293,29 @@ def _run_pipeline_background(
         })
         pipe.execute()
 
+        # Save to chat history for persistence
+        try:
+            from core.dependencies import get_db_context
+            from models.chat import ChatHistory
+
+            with get_db_context() as db:
+                session_id = f"agent_pipeline_{pipeline_id}"
+                chat_entry = ChatHistory(
+                    user_query=text_input[:1000] + ("..." if len(text_input) > 1000 else ""),
+                    response=result.consolidated_output,
+                    model_used=f"agent_set:{agent_set_name or result.agent_set_name}",
+                    collection_name=rag_collection if use_rag else None,
+                    query_type="agent_pipeline",
+                    response_time_ms=int(result.processing_time * 1000),
+                    session_id=session_id
+                )
+                db.add(chat_entry)
+                db.commit()
+                logger.info(f"Chat history saved for background pipeline {pipeline_id}")
+        except Exception as chat_error:
+            logger.warning(f"Failed to save chat history for background pipeline: {chat_error}")
+            # Don't fail the pipeline if chat history save fails
+
         logger.info(f"Background pipeline completed: {pipeline_id}")
         return result
 
@@ -324,7 +349,8 @@ def _run_pipeline_background(
 @agent_pipeline_router.post("/run", response_model=PipelineResultResponse)
 async def run_pipeline(
     req: RunPipelineRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    chat_repo: ChatRepository = Depends(get_chat_repository)
 ):
     """
     Run an agent pipeline synchronously on provided text.
@@ -385,6 +411,24 @@ async def run_pipeline(
 
         # Increment usage count
         agent_set_repo.increment_usage_count(req.agent_set_id, db)
+
+        # Save to chat history for persistence
+        try:
+            session_id = f"agent_pipeline_{result.pipeline_id}"
+            chat_repo.create_chat_entry(
+                user_query=req.text_input[:1000] + ("..." if len(req.text_input) > 1000 else ""),
+                response=result.consolidated_output,
+                model_used=f"agent_set:{agent_set.name}",
+                collection_name=req.rag_collection if req.use_rag else None,
+                query_type="agent_pipeline",
+                response_time_ms=int(result.processing_time * 1000),
+                session_id=session_id
+            )
+            db.commit()
+            logger.info(f"Chat history saved for pipeline {result.pipeline_id}")
+        except Exception as chat_error:
+            logger.warning(f"Failed to save chat history for pipeline: {chat_error}")
+            # Don't fail the request if chat history save fails
 
         return _convert_pipeline_result_to_response(result)
 
@@ -474,7 +518,8 @@ async def run_pipeline_async(
         req.use_rag,
         req.rag_collection,
         req.rag_document_id,
-        req.rag_top_k
+        req.rag_top_k,
+        agent_set.name
     )
 
     # Increment usage count

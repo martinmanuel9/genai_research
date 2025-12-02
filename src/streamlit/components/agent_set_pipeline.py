@@ -103,7 +103,8 @@ def agent_set_pipeline():
             "Section Mode",
             ["auto", "single"],
             key="pipeline_section_mode",
-            help="'auto': Automatically detect and split sections. 'single': Process as one section."
+            help="'auto': Automatically detects sections (via markdown headers, numbered lists, or keywords) and processes each separately before consolidating results. Best for longer documents with distinct parts. "
+                 "'single': Treats entire input as one block - all agents process the whole text together. Best for short content or when you want unified processing."
         )
 
     with col2:
@@ -119,7 +120,8 @@ def agent_set_pipeline():
         ["Background (Async)", "Synchronous (Wait)"],
         horizontal=True,
         key="pipeline_run_mode",
-        help="Background mode returns immediately and allows progress tracking. Synchronous waits for completion."
+        help="'Background (Async)': Returns immediately with a pipeline ID. The pipeline runs in the background while you can do other things. Poll for status and retrieve results when complete. Best for longer pipelines to avoid timeouts. "
+             "'Synchronous (Wait)': Blocks and waits for the pipeline to complete. Returns full results immediately. Best for shorter pipelines when you need results right away."
     )
 
     st.markdown("---")

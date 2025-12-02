@@ -225,7 +225,8 @@ def _render_agent_pipeline_tab(collections: List[str]):
             "Section Mode",
             ["single", "auto"],
             key="dc_pipeline_section_mode",
-            help="'single': Process as one section. 'auto': Detect sections in content."
+            help="'single': Treats entire input as one block - all agents process the whole text together. Best for short queries. "
+                 "'auto': Automatically detects sections (via headers, numbered lists) and processes each separately before consolidating results. Best for longer documents with distinct parts."
         )
 
     st.markdown("---")

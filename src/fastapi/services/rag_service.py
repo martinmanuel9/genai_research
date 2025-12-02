@@ -756,7 +756,7 @@ INSTRUCTIONS:
         """Run RAG check with multiple agents and enhanced logging"""
         session_id = str(uuid.uuid4())
         start_time = time.time()
-        
+
         session_type = SessionType.MULTI_AGENT_DEBATE if len(agent_ids) > 1 else SessionType.RAG_ANALYSIS
         log_agent_session(
             session_id=session_id,
@@ -765,9 +765,17 @@ INSTRUCTIONS:
             user_query=query_text,
             collection_name=collection_name
         )
-        
+
         self.load_selected_compliance_agents(agent_ids)
-        
+
+        # Get consolidated citations for the collection query (run once for all agents)
+        _, _, metadata_list = self.get_relevant_documents(
+            query=query_text,
+            collection_name=collection_name,
+            include_metadata=True
+        )
+        formatted_citations = self._format_document_citations(metadata_list) if metadata_list else ""
+
         results = {}
         with ThreadPoolExecutor() as executor:
             futures = {
@@ -822,16 +830,17 @@ INSTRUCTIONS:
             "agent_responses": results,
             "collection_used": collection_name,
             "session_id": session_id,
-            "processing_time": total_time
+            "processing_time": total_time,
+            "formatted_citations": formatted_citations
         }
 
-    def run_rag_debate_sequence(self, db: Session, session_id: Optional[str], agent_ids: List[int], query_text: str, collection_name: str) -> Tuple[str, List[Dict[str, Any]]]:
+    def run_rag_debate_sequence(self, db: Session, session_id: Optional[str], agent_ids: List[int], query_text: str, collection_name: str) -> Tuple[str, List[Dict[str, Any]], str]:
         """Run RAG debate sequence with multiple agents and enhanced logging"""
         if not session_id:
             session_id = str(uuid.uuid4())
-        
+
         start_time = time.time()
-        
+
         log_agent_session(
             session_id=session_id,
             session_type=SessionType.RAG_DEBATE,
@@ -839,6 +848,14 @@ INSTRUCTIONS:
             user_query=query_text,
             collection_name=collection_name
         )
+
+        # Get consolidated citations for the collection query (run once for all agents)
+        _, _, metadata_list = self.get_relevant_documents(
+            query=query_text,
+            collection_name=collection_name,
+            include_metadata=True
+        )
+        formatted_citations = self._format_document_citations(metadata_list) if metadata_list else ""
 
         # NOTE: DebateSession table was removed in Phase 5
         # Debate sequences no longer need session tracking in a separate table
@@ -926,7 +943,7 @@ INSTRUCTIONS:
             # Don't fail the entire operation if chat history save fails
             db.rollback()
 
-        return session_id, debate_chain
+        return session_id, debate_chain, formatted_citations
 
     def load_selected_compliance_agents(self, agent_ids: List[int]):
         """Load selected compliance agents"""
