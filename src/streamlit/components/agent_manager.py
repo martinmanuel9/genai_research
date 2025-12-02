@@ -22,6 +22,38 @@ from collections import Counter
 TEST_PLAN_AGENT_API = f"{config.fastapi_url}/api/test-plan-agents"
 AGENT_SET_API = f"{config.fastapi_url}/api/agent-sets"
 
+# Workflow type mappings - user-friendly names for UI
+WORKFLOW_DISPLAY_TO_BACKEND = {
+    "Direct Query (Single Agent)": "document_analysis",
+    "Agent Pipeline (Multi-Stage)": "test_plan_generation",
+    "Custom": "general"
+}
+
+WORKFLOW_BACKEND_TO_DISPLAY = {
+    "document_analysis": "Direct Query (Single Agent)",
+    "test_plan_generation": "Agent Pipeline (Multi-Stage)",
+    "general": "Custom"
+}
+
+# User-friendly descriptions
+WORKFLOW_DESCRIPTIONS = {
+    "Direct Query (Single Agent)": {
+        "description": "Single agent responds to your query. Use for direct questions, document analysis, compliance checks.",
+        "placeholders": "{data_sample} - Your input text or document content",
+        "use_cases": "Direct Chat → Chat with AI tab, simple Q&A, document review"
+    },
+    "Agent Pipeline (Multi-Stage)": {
+        "description": "Multiple agents process content in stages (Actor → Critic → QA). Use for complex analysis requiring multiple perspectives.",
+        "placeholders": "{section_title}, {section_content}, {actor_outputs}, {critic_output}, {context}",
+        "use_cases": "Direct Chat → Agent Pipeline tab, test plan generation, multi-agent analysis"
+    },
+    "Custom": {
+        "description": "Flexible configuration for custom workflows. Define your own placeholders.",
+        "placeholders": "Any custom placeholders you define",
+        "use_cases": "Advanced users, experimental workflows"
+    }
+}
+
 
 def render_unified_agent_manager():
     """
@@ -189,8 +221,11 @@ def render_agent_card(agent: Dict):
 
     with col1:
         st.markdown(f"### {status_color} {agent['name']}")
-        workflow_badge = agent.get('workflow_type', 'general').replace('_', ' ').title()
-        st.markdown(f"*{default_badge}* | **{workflow_badge}** | Model: **{agent['model_name']}**")
+        workflow_display = WORKFLOW_BACKEND_TO_DISPLAY.get(
+            agent.get('workflow_type', 'general'),
+            agent.get('workflow_type', 'Unknown')
+        )
+        st.markdown(f"*{default_badge}* | **{workflow_display}** | Model: **{agent['model_name']}**")
 
     with col2:
         st.markdown(f"**ID:** {agent['id']}")
@@ -220,6 +255,155 @@ def render_agent_card(agent: Dict):
     st.markdown("---")
 
 
+def render_smart_template_builder(workflow_type: str, agent_type: str) -> tuple[str, str]:
+    """
+    Smart Template Builder - helps users create prompts without worrying about placeholders.
+
+    Args:
+        workflow_type: The workflow type (document_analysis, test_plan_generation, general)
+        agent_type: The agent type (actor, critic, etc.)
+
+    Returns:
+        Tuple of (system_prompt, user_prompt_template) with proper placeholders
+    """
+    st.markdown("### Smart Template Builder")
+    st.info("Describe what you want the agent to do, and we'll build the template with correct placeholders.")
+
+    # Track workflow/agent type changes to clear generated templates
+    current_config = f"{workflow_type}_{agent_type}"
+    if st.session_state.get("smart_builder_config") != current_config:
+        # Config changed, clear previous generated templates
+        st.session_state.smart_builder_config = current_config
+        st.session_state.pop("generated_system_prompt", None)
+        st.session_state.pop("generated_user_prompt", None)
+
+    # User describes what the agent should do
+    agent_instruction = st.text_area(
+        "What should this agent do?",
+        height=100,
+        placeholder="e.g., Extract testable requirements and identify compliance gaps...",
+        help="Describe the agent's task in plain language. We'll add the necessary data placeholders.",
+        key="smart_builder_instruction"
+    )
+
+    # User describes desired output format
+    output_format = st.text_area(
+        "Desired output format (optional)",
+        height=80,
+        placeholder="e.g., Return a numbered list of requirements with test criteria...",
+        help="Describe how you want the output structured",
+        key="smart_builder_output"
+    )
+
+    # Generate button to explicitly trigger template generation
+    if st.button("Generate Template", type="primary", key="smart_builder_generate"):
+        if not agent_instruction:
+            st.error("Please describe what the agent should do first.")
+            return st.session_state.get("generated_system_prompt", ""), st.session_state.get("generated_user_prompt", "")
+
+        # Build system prompt
+        role_descriptions = {
+            "actor": "You are an expert analyst who extracts detailed, testable requirements from documents.",
+            "critic": "You are a critical reviewer who synthesizes, validates, and deduplicates findings from multiple analysts.",
+            "contradiction": "You are a contradiction detection specialist who identifies conflicts and inconsistencies.",
+            "gap_analysis": "You are a gap analysis expert who identifies missing requirements and coverage gaps.",
+            "compliance": "You are a compliance analyst who evaluates documents against standards and requirements.",
+            "general": "You are an expert AI assistant specialized in analysis and problem-solving.",
+            "rule_development": "You are a technical documentation specialist focused on creating structured guidelines.",
+            "custom": "You are a specialized AI agent."
+        }
+
+        system_prompt = f"""{role_descriptions.get(agent_type, role_descriptions['custom'])}
+
+Your task: {agent_instruction}
+
+{f'Output format: {output_format}' if output_format else 'Provide clear, structured output.'}
+
+Be thorough, accurate, and provide actionable insights."""
+
+        # Build user prompt template based on workflow and agent type
+        if workflow_type == "document_analysis":
+            user_prompt_template = f"""Analyze the following document:
+
+{{data_sample}}
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+        elif workflow_type == "test_plan_generation":
+            # Different templates based on agent stage position
+            if agent_type == "actor":
+                user_prompt_template = f"""## Section: {{section_title}}
+
+{{section_content}}
+
+---
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+            elif agent_type == "critic":
+                user_prompt_template = f"""## Section: {{section_title}}
+
+### Original Content:
+{{section_content}}
+
+### Previous Analysis (Actor Outputs):
+{{actor_outputs}}
+
+---
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+            elif agent_type in ["contradiction", "gap_analysis"]:
+                user_prompt_template = f"""## Section: {{section_title}}
+
+### Original Content:
+{{section_content}}
+
+### Previous Analysis:
+{{context}}
+
+### Critic Synthesis:
+{{critic_output}}
+
+---
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+            else:  # other test_plan types
+                user_prompt_template = f"""## Section: {{section_title}}
+
+{{section_content}}
+
+### Context from Previous Stages:
+{{context}}
+
+---
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+        else:  # general workflow
+            user_prompt_template = f"""{{input}}
+
+---
+
+Task: {agent_instruction}
+{f'Format: {output_format}' if output_format else ''}"""
+
+        # Store in session state so the form can use them
+        st.session_state.generated_system_prompt = system_prompt
+        st.session_state.generated_user_prompt = user_prompt_template
+        st.success("Template generated! The prompts below have been updated.")
+        st.rerun()
+
+    # Return stored values (or empty if not generated yet)
+    return st.session_state.get("generated_system_prompt", ""), st.session_state.get("generated_user_prompt", "")
+
+
 def render_create_agent_form():
     """
     Form to create a new agent with template auto-population.
@@ -236,43 +420,171 @@ def render_create_agent_form():
     except:
         system_defaults = []
 
-    # Workflow type selection (helps users understand purpose)
-    workflow_type = st.selectbox(
+    # Workflow type selection with user-friendly names
+    workflow_display = st.selectbox(
         "Workflow Type",
-        ["document_analysis", "test_plan_generation", "general"],
-        help="Select the workflow this agent will be used for",
-        key="create_workflow_type"
+        list(WORKFLOW_DISPLAY_TO_BACKEND.keys()),
+        help="Select how this agent will be used",
+        key="create_workflow_display"
     )
 
-    # Show workflow-specific guidance
-    workflow_info = {
-        "document_analysis": {
-            "description": "Single agent document compliance checks and analysis",
-            "placeholders": "{data_sample}",
-            "examples": "Compliance Checker, Requirements Extractor, Technical Reviewer"
-        },
-        "test_plan_generation": {
-            "description": "Multi-agent pipeline for test plan generation",
-            "placeholders": "{section_title}, {section_content}, {actor_outputs}, {critic_output}",
-            "examples": "Actor, Critic, Contradiction Detector, Gap Analyzer"
-        },
-        "general": {
-            "description": "General purpose agent with flexible configuration",
-            "placeholders": "Custom placeholders as needed",
-            "examples": "Custom analyzer, specialized reviewer"
-        }
-    }
+    # Map to backend value
+    workflow_type = WORKFLOW_DISPLAY_TO_BACKEND[workflow_display]
 
-    info = workflow_info[workflow_type]
+    # Show workflow-specific guidance using new descriptions
+    info = WORKFLOW_DESCRIPTIONS[workflow_display]
     st.info(f"""
-    **{workflow_type.upper().replace('_', ' ')}**
+**{workflow_display}**
 
-    {info['description']}
+{info['description']}
 
-    **Required Placeholders:** `{info['placeholders']}`
+**Available Placeholders:** `{info['placeholders']}`
 
-    **Examples:** {info['examples']}
+**Use Cases:** {info['use_cases']}
+
+**See the Template Variable Reference below for complete usage examples.**
     """)
+
+    # Template Variable Helper (collapsible reference)
+    with st.expander("Template Variable Reference & Examples", expanded=False):
+        st.markdown("### Quick Reference for " + workflow_type.replace('_', ' ').title())
+
+        if workflow_type == "document_analysis":
+            st.info("""
+            **Available Variables for Document Analysis:**
+
+            | Variable | Description |
+            |----------|-------------|
+            | `{data_sample}` | The complete document content to analyze |
+
+            **When to Use**: Single-agent compliance checks, requirement extraction, document review
+            """)
+
+            st.markdown("**Example User Prompt Template:**")
+            st.code("""
+Analyze the following document for compliance with MIL-STD requirements:
+
+{data_sample}
+
+Identify:
+1. Any violations of the requirements
+2. Missing sections or incomplete information
+3. Areas that need clarification
+
+Format your findings as:
+- Issue: [description]
+- Severity: [High/Medium/Low]
+- Recommendation: [specific action needed]
+            """, language="text")
+
+        elif workflow_type == "test_plan_generation":
+            st.info("""
+            **Available Variables for Test Plan Generation:**
+
+            | Variable | When Available | Description |
+            |----------|----------------|-------------|
+            | `{section_title}` | All stages | Current section title |
+            | `{section_content}` | All stages | Current section content |
+            | `{actor_outputs}` | After actor stage | Combined output from all actor agents |
+            | `{critic_output}` | After critic stage | Synthesized critic output |
+            | `{context}` | All stages | All previous stage outputs combined |
+
+            **Important**: Variables are only available AFTER their stage completes!
+            """)
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**For Actor Agents (Stage 1 - First to run):**")
+                st.code("""
+Analyze the following section and extract testable requirements:
+
+## Section: {section_title}
+
+{section_content}
+
+For each requirement, provide:
+1. Test ID and title
+2. Test methodology
+3. Acceptance criteria
+4. Required resources
+                """, language="text")
+                st.caption("Actors only have access to section_title and section_content")
+
+            with col2:
+                st.markdown("**For Critic Agents (Stage 2 - After actors):**")
+                st.code("""
+Review and synthesize the following analyses from actor agents:
+
+{actor_outputs}
+
+Your task:
+1. Remove duplicate test cases
+2. Resolve conflicts
+3. Merge similar requirements
+4. Create unified test plan
+
+Output a consolidated list with no duplicates.
+                """, language="text")
+                st.caption("Critics can use actor_outputs from Stage 1")
+
+            st.markdown("**For QA/Gap Analysis (Stage 3+ - After critic):**")
+            st.code("""
+Review the synthesized test plan for gaps:
+
+## Original Section
+{section_title}
+{section_content}
+
+## Synthesized Test Plan
+{critic_output}
+
+Identify:
+1. Missing test scenarios
+2. Untested edge cases
+3. Gaps in coverage
+            """, language="text")
+            st.caption("Later stages can use all previous outputs")
+
+        else:  # general
+            st.info("""
+            **General Workflow - Flexible Placeholders**
+
+            Use any placeholder format you need for your custom workflow.
+
+            Common patterns:
+            - `{input}` - User input or document content
+            - `{context}` - Additional context information
+            - `{data}` - Generic data to process
+            - Custom placeholders as needed for your use case
+            """)
+
+            st.markdown("**Example User Prompt Template:**")
+            st.code("""
+Process the following input according to the specified requirements:
+
+{input}
+
+Apply the analysis framework and provide structured output.
+            """, language="text")
+
+        st.markdown("---")
+
+        st.warning("""
+        **Common Mistakes to Avoid:**
+
+        - Do NOT use `{rag_context}` - RAG context is automatically prepended by the system
+        - Do NOT use variables before they're available (e.g., {actor_outputs} in actor stage)
+        - ALWAYS include the required placeholder for your workflow type
+        """)
+
+        st.success("""
+        **Pro Tips:**
+
+        - Check the **Help & Info** tab for complete examples and best practices
+        - Use system default agents as templates (auto-loaded above)
+        - Test your agent with sample data before production use
+        """)
 
     # Agent type selection - filtered by workflow type
     agent_type_options = {
@@ -301,26 +613,74 @@ def render_create_agent_form():
     }
     st.caption(f"**{agent_type.upper()}**: {type_info.get(agent_type, '')}")
 
-    # Find matching system default template
-    template_agent = None
-    for agent in system_defaults:
-        if agent.get('workflow_type') == workflow_type and agent.get('agent_type') == agent_type:
-            template_agent = agent
-            break
+    st.markdown("---")
 
-    # Set default values from template
-    default_model = template_agent.get('model_name', 'gpt-4') if template_agent else 'gpt-4'
-    default_temp = template_agent.get('temperature', 0.7) if template_agent else 0.7
-    default_max_tokens = template_agent.get('max_tokens', 4000) if template_agent else 4000
-    default_description = template_agent.get('description', '') if template_agent else ''
-    default_system_prompt = template_agent.get('system_prompt', '') if template_agent else ''
-    default_user_prompt = template_agent.get('user_prompt_template', '') if template_agent else ''
+    # Template creation method selection
+    template_method = st.radio(
+        "How would you like to create the prompts?",
+        ["Use Smart Builder (Recommended)", "Use System Template", "Write from Scratch"],
+        horizontal=True,
+        key="template_method",
+        help="Smart Builder auto-generates placeholders. System Template loads proven defaults. Write from Scratch gives full control."
+    )
 
-    if template_agent:
-        st.success(f"Template loaded: **{template_agent['name']}**")
-        st.caption(f"Form is pre-filled with this template. Customize as needed and give it a unique name.")
-    else:
-        st.warning("No system template found for this combination. You'll need to write prompts from scratch.")
+    # Initialize default values
+    default_system_prompt = ""
+    default_user_prompt = ""
+    default_model = 'gpt-4'
+    default_temp = 0.7
+    default_max_tokens = 2500
+    default_description = ""
+
+    # Smart Builder mode
+    if template_method == "Use Smart Builder (Recommended)":
+        smart_system_prompt, smart_user_prompt = render_smart_template_builder(workflow_type, agent_type)
+        # Use session state values for form defaults
+        default_system_prompt = st.session_state.get("generated_system_prompt", "")
+        default_user_prompt = st.session_state.get("generated_user_prompt", "")
+
+        if default_system_prompt and default_user_prompt:
+            st.success("Template generated! Review and customize in the form below.")
+            with st.expander("Preview Generated Template", expanded=False):
+                st.markdown("**System Prompt:**")
+                st.code(default_system_prompt, language="text")
+                st.markdown("**User Prompt Template:**")
+                st.code(default_user_prompt, language="text")
+
+    elif template_method == "Use System Template":
+        # Clear any Smart Builder generated templates when switching methods
+        st.session_state.pop("generated_system_prompt", None)
+        st.session_state.pop("generated_user_prompt", None)
+
+        # Find matching system default template
+        template_agent = None
+        for agent in system_defaults:
+            if agent.get('workflow_type') == workflow_type and agent.get('agent_type') == agent_type:
+                template_agent = agent
+                break
+
+        # Set default values from template
+        if template_agent:
+            default_model = template_agent.get('model_name', 'gpt-4')
+            default_temp = template_agent.get('temperature', 0.7)
+            default_max_tokens = template_agent.get('max_tokens', 4000)
+            default_description = template_agent.get('description', '')
+            default_system_prompt = template_agent.get('system_prompt', '')
+            default_user_prompt = template_agent.get('user_prompt_template', '')
+
+            st.success(f"Template loaded: **{template_agent['name']}**")
+            st.caption(f"Form is pre-filled with this template. Customize as needed and give it a unique name.")
+        else:
+            st.warning("No system template found for this combination. You'll need to write prompts from scratch.")
+
+    else:  # Write from Scratch
+        # Clear any Smart Builder generated templates when switching methods
+        st.session_state.pop("generated_system_prompt", None)
+        st.session_state.pop("generated_user_prompt", None)
+
+        default_system_prompt = ""
+        default_user_prompt = ""
+        st.info("You'll need to write prompts with correct placeholders. See the Template Variable Reference above.")
 
     with st.form("create_agent_form"):
         col1, col2 = st.columns(2)
@@ -485,11 +845,15 @@ def render_view_details(agent: Dict):
     col1, col2 = st.columns(2)
 
     with col1:
+        workflow_display = WORKFLOW_BACKEND_TO_DISPLAY.get(
+            agent.get('workflow_type', 'general'),
+            agent.get('workflow_type', 'N/A')
+        )
         st.json({
             "ID": agent['id'],
             "Name": agent['name'],
             "Type": agent['agent_type'],
-            "Workflow": agent.get('workflow_type', 'N/A'),
+            "Workflow": workflow_display,
             "Model": agent['model_name'],
             "Temperature": agent['temperature'],
             "Max Tokens": agent['max_tokens'],
@@ -522,16 +886,21 @@ def render_edit_agent(agent: Dict):
         with col1:
             new_name = st.text_input("Agent Name", value=agent['name'])
 
-            # Workflow type selection
-            workflow_options = ["document_analysis", "test_plan_generation", "general"]
+            # Workflow type selection with user-friendly names
             current_workflow = agent.get('workflow_type', 'general')
-            workflow_index = workflow_options.index(current_workflow) if current_workflow in workflow_options else 2
-            new_workflow_type = st.selectbox(
+            current_workflow_display = WORKFLOW_BACKEND_TO_DISPLAY.get(current_workflow, "Custom")
+            workflow_display_options = list(WORKFLOW_DISPLAY_TO_BACKEND.keys())
+            workflow_display_index = workflow_display_options.index(current_workflow_display) if current_workflow_display in workflow_display_options else 2
+
+            new_workflow_display = st.selectbox(
                 "Workflow Type",
-                workflow_options,
-                index=workflow_index,
+                workflow_display_options,
+                index=workflow_display_index,
                 help="Select the workflow this agent will be used for"
             )
+
+            # Map to backend value
+            new_workflow_type = WORKFLOW_DISPLAY_TO_BACKEND[new_workflow_display]
 
             new_model = st.selectbox(
                 "Model",
@@ -700,93 +1069,512 @@ def render_delete_agent(agent: Dict):
 
 
 def render_help_info():
-    """Display help and best practices."""
+    """Display comprehensive help and best practices with detailed template variable guide."""
     st.subheader("Agent Management Guide")
 
-    st.markdown("""
-    ## Understanding Workflow Type vs Agent Type
+    # Create tabs for different sections
+    help_tab1, help_tab2, help_tab3, help_tab4 = st.tabs([
+        "Template Variables",
+        "Workflow Guide",
+        "Best Practices",
+        "Common Mistakes"
+    ])
 
-    ### Workflow Type (PURPOSE)
-    **What workflow will use this agent?**
+    with help_tab1:
+        st.markdown("## Template Variable Quick Reference")
+        st.info("Template variables are placeholders in your prompts that get replaced with actual data during execution.")
 
-    - **Document Analysis**: Single-agent compliance checks on existing documents
-      - Endpoint: `/api/agent/compliance-check`
-      - Placeholders: `{data_sample}`
-      - Use case: Analyze a document for compliance, extract requirements, technical review
+        # Quick reference table
+        st.markdown("""
+        ### Available Template Variables by Workflow
 
-    - **Test Plan Generation**: Multi-agent pipeline to create test plans
-      - Endpoint: `/api/doc/generate_optimized_test_plan`
-      - Placeholders: `{section_title}`, `{section_content}`, `{actor_outputs}`, `{critic_output}`
-      - Use case: Generate comprehensive test plans from military standards
+        | Variable | Workflow | Stage Availability | Description |
+        |----------|----------|-------------------|-------------|
+        | `{data_sample}` | document_analysis | Always | The complete document content to analyze |
+        | `{section_title}` | test_plan_generation | All stages | Title of the current section being processed |
+        | `{section_content}` | test_plan_generation | All stages | Full content of the current section |
+        | `{actor_outputs}` | test_plan_generation | After actor stage | Combined output from all actor agents |
+        | `{critic_output}` | test_plan_generation | After critic stage | Synthesized critic output |
+        | `{context}` | test_plan_generation | All stages | All previous stage outputs combined |
+        """)
 
-    - **General**: Flexible agents for custom workflows
-      - Placeholders: Custom as needed
-      - Use case: Your own specialized workflows
+        st.markdown("---")
 
-    ### Agent Type (ROLE)
-    **What role does this agent play within its workflow?**
+        # Stage execution order diagram
+        st.markdown("### Stage Execution Order & Variable Availability")
+        st.code("""
+Test Plan Generation Pipeline:
 
-    #### For Test Plan Generation:
-    - **Actor**: Extracts testable requirements (runs first, in parallel)
-    - **Critic**: Synthesizes actor outputs (runs after actors)
-    - **Contradiction**: Detects conflicts across sections
-    - **Gap Analysis**: Identifies missing test coverage
+┌─────────────────────────────────────────────────────────┐
+│ Stage 1: Actor Stage                                    │
+│ ├─ Agent 1 (Actor) ──┐                                  │
+│ ├─ Agent 2 (Actor) ──┼─► {actor_outputs} populated     │
+│ └─ Agent 3 (Actor) ──┘                                  │
+│                                                          │
+│ Available variables: {section_title}, {section_content} │
+└─────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│ Stage 2: Critic Stage                                   │
+│ └─ Agent 4 (Critic) ────► {critic_output} populated    │
+│                                                          │
+│ Available variables: {section_title}, {section_content},│
+│                     {actor_outputs}, {context}          │
+└─────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────┐
+│ Stage 3+: QA/Contradiction/Gap Analysis Stages          │
+│ └─ Additional agents ────► Additional outputs           │
+│                                                          │
+│ Available variables: ALL previous stage outputs         │
+│ ({section_title}, {section_content}, {actor_outputs},   │
+│  {critic_output}, {context})                            │
+└─────────────────────────────────────────────────────────┘
+        """, language="text")
 
-    #### For Document Analysis:
-    - **Compliance**: Evaluates compliance with standards
-    - **Custom**: Specialized analysis (requirements extraction, technical review, etc.)
+        st.markdown("---")
 
-    #### For General:
-    - **General**: Multi-purpose engineering agent
-    - **Rule Development**: Specialized in document analysis
-    - **Custom**: User-defined behavior
+        # RAG context explanation
+        st.markdown("### RAG Context (NOT a Template Variable)")
+        st.warning("""
+        **IMPORTANT**: RAG context is NOT a placeholder variable you can use!
 
-    ## Creating Agents
+        RAG context is automatically prepended to your input when you use RAG collections.
+        You don't need to reference it in your prompts.
+        """)
 
-    ### Quick Start (Recommended)
-    1. Select **Workflow Type** (document_analysis, test_plan_generation, or general)
-    2. Select **Agent Type** (role within that workflow)
-    3. Form auto-populates with proven template
-    4. Customize the template and give it a unique name
-    5. Click Create!
+        st.markdown("**How RAG Context Works:**")
+        st.code("""
+When RAG is enabled, the system automatically constructs:
 
-    ### Alternative: Clone Existing Agent
-    Instead of creating from scratch, go to "Manage Agents" → Select agent → "Clone"
+## Reference Context (from {collection_name})
+[Retrieved document 1]
+[Retrieved document 2]
+[Retrieved document 3]
+---
+## User Query/Content
+{Your actual input with template variables filled in}
+        """, language="text")
 
-    ## Best Practices
+        st.info("The RAG context is invisible to your prompt templates. Just write your prompts normally using the available template variables.")
 
-    ### System Prompts
-    - Define clear expertise areas
-    - Include analysis frameworks
-    - Specify output formats
-    - Reference relevant standards
-    - Use bullet points for clarity
+        st.markdown("---")
 
-    ### User Prompt Templates
-    - **CRITICAL**: Use correct placeholders for your workflow type
-    - Document Analysis → `{data_sample}`
-    - Test Plan Generation → `{section_title}`, `{section_content}`, etc.
-    - Provide clear instructions
-    - Specify desired output structure
+        # Workflow-specific examples
+        st.markdown("### Complete Examples by Workflow")
 
-    ### Temperature Settings
-    - **0.1-0.3**: Consistent, factual (compliance checks)
-    - **0.4-0.7**: Balanced (general work)
-    - **0.8-1.0**: Creative (brainstorming)
+        with st.expander("Document Analysis Workflow Example", expanded=False):
+            st.markdown("**Use Case**: Single-agent compliance checking")
+            st.code("""
+# System Prompt
+You are a compliance expert specializing in military standards and
+technical documentation. Your role is to:
 
-    ### Model Selection
-    - **GPT-4**: Recommended for most use cases
-    - **GPT-4o**: Faster, good for simpler tasks
-    - **Claude**: Alternative for specific tasks
-    - Consider cost vs. quality trade-offs
+- Analyze documents for compliance with specified standards
+- Identify violations, gaps, and areas of concern
+- Provide clear, actionable recommendations
+- Reference specific sections and requirements
 
-    ## Management Tips
-    - Use system default agents as templates
-    - Clone agents before making major changes
-    - Review agent performance regularly
-    - Deactivate unused agents
-    - Test after making changes
-    """)
+# User Prompt Template
+Analyze the following document for compliance with MIL-STD requirements:
+
+{data_sample}
+
+Identify any violations, missing requirements, or areas that need attention.
+Provide specific references to the standard sections.
+            """, language="text")
+
+        with st.expander("Test Plan Generation - Actor Agent Example", expanded=False):
+            st.markdown("**Use Case**: First stage agent that extracts requirements")
+            st.code("""
+# System Prompt
+You are a systems engineering expert specializing in test plan development.
+Your role is to analyze military standard sections and extract testable
+requirements. For each requirement you identify:
+
+- Provide a clear test title
+- Specify test methodology
+- Define acceptance criteria
+- Identify required resources
+
+# User Prompt Template
+Analyze the following section and extract all testable requirements:
+
+## Section: {section_title}
+
+{section_content}
+
+For each testable requirement, provide:
+1. Test ID and title
+2. Test methodology
+3. Acceptance criteria
+4. Required resources and equipment
+            """, language="text")
+
+        with st.expander("Test Plan Generation - Critic Agent Example", expanded=False):
+            st.markdown("**Use Case**: Second stage agent that synthesizes actor outputs")
+            st.code("""
+# System Prompt
+You are a senior test engineer responsible for synthesizing and
+consolidating test requirements from multiple analysts. Your role is to:
+
+- Review outputs from multiple actor agents
+- Identify and remove duplicate test cases
+- Resolve conflicts between different interpretations
+- Create a unified, coherent test plan
+- Ensure comprehensive coverage
+
+# User Prompt Template
+Review and synthesize the following test requirement analyses from
+multiple actor agents:
+
+{actor_outputs}
+
+Your task:
+1. Remove duplicate test cases
+2. Resolve any conflicts or contradictions
+3. Merge similar requirements
+4. Create a consolidated, deduplicated list
+5. Ensure all critical requirements are covered
+
+Output a unified test plan with no duplicates.
+            """, language="text")
+
+        with st.expander("Test Plan Generation - QA/Gap Analysis Example", expanded=False):
+            st.markdown("**Use Case**: Later stage agent using all previous outputs")
+            st.code("""
+# System Prompt
+You are a quality assurance specialist focused on identifying gaps
+and missing test coverage. You review synthesized test plans and
+identify areas that need additional testing.
+
+# User Prompt Template
+Review the following synthesized test plan and identify any gaps:
+
+## Original Section
+{section_title}
+{section_content}
+
+## Synthesized Test Plan
+{critic_output}
+
+Identify:
+1. Missing test scenarios
+2. Untested edge cases
+3. Gaps in coverage
+4. Additional verification needs
+            """, language="text")
+
+    with help_tab2:
+        st.markdown("## Understanding Workflow Type vs Agent Type")
+
+        st.markdown("### Workflow Type (PURPOSE)")
+        st.info("**What workflow will use this agent?**")
+
+        st.markdown("""
+        #### Direct Query (Single Agent)
+        - **Purpose**: Single-agent compliance checks on existing documents
+        - **Backend Name**: `document_analysis`
+        - **API Endpoint**: `/api/agent/compliance-check`
+        - **Available Variables**: `{data_sample}`
+        - **Use Cases**:
+          - Compliance checking against standards
+          - Requirements extraction
+          - Technical documentation review
+          - Gap analysis on existing documents
+          - Direct Chat → Chat with AI tab
+
+        #### Agent Pipeline (Multi-Stage)
+        - **Purpose**: Multi-agent pipeline to create comprehensive test plans
+        - **Backend Name**: `test_plan_generation`
+        - **API Endpoint**: `/api/doc/generate_optimized_test_plan`
+        - **Available Variables**: `{section_title}`, `{section_content}`, `{actor_outputs}`, `{critic_output}`, `{context}`
+        - **Use Cases**:
+          - Generate test plans from military standards
+          - Multi-stage analysis with actor/critic pattern
+          - Contradiction detection across sections
+          - Gap analysis in generated test plans
+          - Direct Chat → Agent Pipeline tab
+
+        #### Custom
+        - **Purpose**: Flexible agents for custom workflows
+        - **Backend Name**: `general`
+        - **Available Variables**: Custom placeholders as needed
+        - **Use Cases**:
+          - Custom analysis workflows
+          - Specialized review processes
+          - Experimental agent configurations
+        """)
+
+        st.markdown("---")
+
+        st.markdown("### Agent Type (ROLE)")
+        st.info("**What role does this agent play within its workflow?**")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown("#### Test Plan Generation")
+            st.markdown("""
+            - **Actor**: Extracts testable requirements (runs first, in parallel)
+            - **Critic**: Synthesizes actor outputs (runs after actors)
+            - **Contradiction**: Detects conflicts across sections
+            - **Gap Analysis**: Identifies missing test coverage
+            """)
+
+        with col2:
+            st.markdown("#### Document Analysis")
+            st.markdown("""
+            - **Compliance**: Evaluates compliance with standards
+            - **Custom**: Specialized analysis tasks
+            """)
+
+        with col3:
+            st.markdown("#### General")
+            st.markdown("""
+            - **General**: Multi-purpose engineering agent
+            - **Rule Development**: Document analysis specialist
+            - **Custom**: User-defined behavior
+            """)
+
+        st.markdown("---")
+
+        st.markdown("### Creating Agents: Quick Start")
+        st.success("""
+        **Recommended Workflow:**
+
+        1. Go to the **Create Agent** tab
+        2. Select your **Workflow Type** (determines which placeholders are available)
+        3. Select your **Agent Type** (determines the agent's role)
+        4. Review the auto-populated template from system defaults
+        5. Customize the prompts for your specific needs
+        6. Give it a unique, descriptive name
+        7. Click **Create Agent**
+
+        **Alternative:** Clone an existing agent from the **Manage Agents** tab
+        """)
+
+    with help_tab3:
+        st.markdown("## Best Practices")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("### System Prompts")
+            st.markdown("""
+            **Purpose**: Define the agent's role, expertise, and behavior
+
+            **Best Practices**:
+            - Define clear expertise areas
+            - Include specific analysis frameworks
+            - Specify output formats and structure
+            - Reference relevant standards or methodologies
+            - Use bullet points for clarity
+            - Keep it concise but comprehensive (200-500 words)
+
+            **Example Structure**:
+            ```
+            You are a [role] specializing in [domain].
+            Your expertise includes:
+            - [Skill 1]
+            - [Skill 2]
+
+            Your responsibilities:
+            - [Task 1]
+            - [Task 2]
+
+            Output format:
+            - [Format requirement 1]
+            - [Format requirement 2]
+            ```
+            """)
+
+            st.markdown("### Temperature Settings")
+            st.markdown("""
+            - **0.0-0.3**: Highly deterministic, factual
+              - Use for: Compliance checking, requirement extraction
+            - **0.4-0.7**: Balanced creativity and consistency
+              - Use for: General analysis, test plan generation
+            - **0.8-1.0**: Creative and varied
+              - Use for: Brainstorming, exploratory analysis
+            """)
+
+        with col2:
+            st.markdown("### User Prompt Templates")
+            st.markdown("""
+            **Purpose**: Template that gets filled with actual data during execution
+
+            **Critical Rules**:
+            - **ALWAYS** use correct placeholders for your workflow type
+            - Document Analysis → `{data_sample}` only
+            - Test Plan Generation → stage-appropriate variables
+            - Provide clear, specific instructions
+            - Specify desired output structure
+            - Include examples when helpful
+
+            **Example Structure**:
+            ```
+            Analyze the following [document type]:
+
+            {appropriate_placeholder}
+
+            Your task:
+            1. [Specific task 1]
+            2. [Specific task 2]
+
+            Output format:
+            - [Format details]
+            ```
+            """)
+
+            st.markdown("### Model Selection")
+            st.markdown("""
+            - **GPT-4**: Best quality, recommended for complex analysis
+            - **GPT-4o**: Faster, good for simpler or repetitive tasks
+            - **Claude**: Alternative with different strengths
+            - **Consider**: Cost vs. quality trade-offs for your use case
+            """)
+
+        st.markdown("---")
+
+        st.markdown("### Management Tips")
+        st.info("""
+        - Use system default agents as starting templates
+        - Clone agents before making major experimental changes
+        - Test new agents on sample data before production use
+        - Review agent performance regularly
+        - Deactivate unused agents to keep the system clean
+        - Document custom agents with clear descriptions
+        - Version agent names when making significant changes (e.g., "Actor v2")
+        """)
+
+    with help_tab4:
+        st.markdown("## Common Mistakes to Avoid")
+
+        st.error("""
+        ### 1. Using `{rag_context}` as a Placeholder
+
+        **WRONG:**
+        ```
+        Review the following context:
+        {rag_context}
+
+        Now analyze: {data_sample}
+        ```
+
+        **WHY IT'S WRONG**: `{rag_context}` is NOT a valid template variable.
+        RAG context is automatically prepended by the system when RAG is enabled.
+
+        **CORRECT:**
+        ```
+        Analyze the following document:
+        {data_sample}
+        ```
+
+        The RAG context will be automatically added if RAG is enabled.
+        """)
+
+        st.error("""
+        ### 2. Using Stage-Specific Variables in Wrong Stages
+
+        **WRONG (Actor Agent):**
+        ```
+        Review the actor outputs:
+        {actor_outputs}
+
+        Section: {section_title}
+        ```
+
+        **WHY IT'S WRONG**: `{actor_outputs}` doesn't exist yet in the actor stage!
+        Actors run FIRST.
+
+        **CORRECT (Actor Agent):**
+        ```
+        Analyze the following section:
+
+        ## {section_title}
+        {section_content}
+        ```
+        """)
+
+        st.error("""
+        ### 3. Forgetting Required Placeholders
+
+        **WRONG (Document Analysis):**
+        ```
+        Perform a compliance check on the document.
+        ```
+
+        **WHY IT'S WRONG**: No `{data_sample}` placeholder!
+        The agent won't receive any document content.
+
+        **CORRECT:**
+        ```
+        Perform a compliance check on the following document:
+
+        {data_sample}
+        ```
+        """)
+
+        st.error("""
+        ### 4. Using Wrong Workflow Type for Your Use Case
+
+        **WRONG**: Creating a test plan generation agent with workflow type = "Direct Query (Single Agent)"
+
+        **WHY IT'S WRONG**: The wrong placeholders will be available.
+        You won't have access to `{section_title}`, `{actor_outputs}`, etc.
+
+        **CORRECT**: Match workflow type to your actual use case:
+        - Creating test plans → "Agent Pipeline (Multi-Stage)"
+        - Checking existing docs → "Direct Query (Single Agent)"
+        - Custom workflows → "Custom"
+        """)
+
+        st.error("""
+        ### 5. Overly Vague Prompts
+
+        **WRONG:**
+        ```
+        Analyze this: {data_sample}
+        ```
+
+        **WHY IT'S WRONG**: Agent doesn't know WHAT to analyze for or HOW to format output.
+
+        **CORRECT:**
+        ```
+        Analyze the following document for compliance with MIL-STD-810:
+
+        {data_sample}
+
+        Identify:
+        1. Sections that violate the standard
+        2. Missing required elements
+        3. Areas needing clarification
+
+        Format each finding as:
+        - Issue: [description]
+        - Severity: [High/Medium/Low]
+        - Recommendation: [action needed]
+        ```
+        """)
+
+        st.markdown("---")
+
+        st.success("""
+        ### Quick Checklist Before Creating Agent
+
+        - [ ] Selected correct workflow_type for my use case
+        - [ ] Selected appropriate agent_type for the role
+        - [ ] System prompt defines clear expertise and responsibilities
+        - [ ] User prompt template uses correct placeholders
+        - [ ] User prompt template has clear instructions
+        - [ ] Output format is specified
+        - [ ] Temperature is appropriate for the task
+        - [ ] Agent has a descriptive, unique name
+        - [ ] Description field explains the agent's purpose
+        """)
 
 # ======================================================================
 # AGENT SET MANAGEMENT FUNCTIONS
