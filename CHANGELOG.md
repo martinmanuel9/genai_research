@@ -5,7 +5,7 @@ All notable changes to GenAI Research will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.46] - 2025-12-01
+## [0.0.49] - 2025-12-02
 
 ### Added
 - Initial release of Verification GenAI
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix to include citations within the direct chat
 - Fix persistent models within docker-compose.yml so that the models folder is found within start of install
 - Fix created an automatic agent build - aligning with the different types of requests needed for agents
+
 
 ### Features
 - **Test Plan Generation**: Multi-agent Actor-Critic system for extracting requirements
