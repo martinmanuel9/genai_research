@@ -318,24 +318,24 @@ jobs:
           PKG_DIR="genai-research_${VERSION}_${ARCH}"
 
           # Create directory structure
-          mkdir -p "$PKG_DIR/opt/genai_research"
+          mkdir -p "$PKG_DIR/opt/jitc_genai"
           mkdir -p "$PKG_DIR/DEBIAN"
 
           # Copy application files
-          cp -r src "$PKG_DIR/opt/genai_research/"
-          cp -r scripts "$PKG_DIR/opt/genai_research/"
-          cp docker-compose.yml "$PKG_DIR/opt/genai_research/"
-          cp Dockerfile.base "$PKG_DIR/opt/genai_research/"
-          cp pyproject.toml "$PKG_DIR/opt/genai_research/"
-          cp poetry.lock "$PKG_DIR/opt/genai_research/"
-          cp run "$PKG_DIR/opt/genai_research/"
-          chmod +x "$PKG_DIR/opt/genai_research/run"
-          cp .env.template "$PKG_DIR/opt/genai_research/.env.template"
-          cp .env.template "$PKG_DIR/opt/genai_research/.env"
-          cp VERSION "$PKG_DIR/opt/genai_research/"
-          cp CHANGELOG.md "$PKG_DIR/opt/genai_research/"
-          cp README.md "$PKG_DIR/opt/genai_research/"
-          cp INSTALL.md "$PKG_DIR/opt/genai_research/"
+          cp -r src "$PKG_DIR/opt/jitc_genai/"
+          cp -r scripts "$PKG_DIR/opt/jitc_genai/"
+          cp docker-compose.yml "$PKG_DIR/opt/jitc_genai/"
+          cp Dockerfile.base "$PKG_DIR/opt/jitc_genai/"
+          cp pyproject.toml "$PKG_DIR/opt/jitc_genai/"
+          cp poetry.lock "$PKG_DIR/opt/jitc_genai/"
+          cp run "$PKG_DIR/opt/jitc_genai/"
+          chmod +x "$PKG_DIR/opt/jitc_genai/run"
+          cp .env.template "$PKG_DIR/opt/jitc_genai/.env.template"
+          cp .env.template "$PKG_DIR/opt/jitc_genai/.env"
+          cp VERSION "$PKG_DIR/opt/jitc_genai/"
+          cp CHANGELOG.md "$PKG_DIR/opt/jitc_genai/"
+          cp README.md "$PKG_DIR/opt/jitc_genai/"
+          cp INSTALL.md "$PKG_DIR/opt/jitc_genai/"
 
           # Copy DEBIAN control files
           cp installer/linux/DEBIAN/* "$PKG_DIR/DEBIAN/"
@@ -421,45 +421,45 @@ jobs:
           # No build needed - Python/Docker application
 
           %install
-          mkdir -p %{buildroot}/opt/genai_research
-          cp -r src %{buildroot}/opt/genai_research/
-          cp -r scripts %{buildroot}/opt/genai_research/
-          cp docker-compose.yml %{buildroot}/opt/genai_research/
-          cp Dockerfile.base %{buildroot}/opt/genai_research/
-          cp pyproject.toml %{buildroot}/opt/genai_research/
-          cp poetry.lock %{buildroot}/opt/genai_research/
-          cp run %{buildroot}/opt/genai_research/
-          chmod +x %{buildroot}/opt/genai_research/run
-          cp .env.template %{buildroot}/opt/genai_research/.env.template
-          cp .env.template %{buildroot}/opt/genai_research/.env
-          cp VERSION %{buildroot}/opt/genai_research/
-          cp CHANGELOG.md %{buildroot}/opt/genai_research/
-          cp README.md %{buildroot}/opt/genai_research/
-          cp INSTALL.md %{buildroot}/opt/genai_research/
+          mkdir -p %{buildroot}/opt/jitc_genai
+          cp -r src %{buildroot}/opt/jitc_genai/
+          cp -r scripts %{buildroot}/opt/jitc_genai/
+          cp docker-compose.yml %{buildroot}/opt/jitc_genai/
+          cp Dockerfile.base %{buildroot}/opt/jitc_genai/
+          cp pyproject.toml %{buildroot}/opt/jitc_genai/
+          cp poetry.lock %{buildroot}/opt/jitc_genai/
+          cp run %{buildroot}/opt/jitc_genai/
+          chmod +x %{buildroot}/opt/jitc_genai/run
+          cp .env.template %{buildroot}/opt/jitc_genai/.env.template
+          cp .env.template %{buildroot}/opt/jitc_genai/.env
+          cp VERSION %{buildroot}/opt/jitc_genai/
+          cp CHANGELOG.md %{buildroot}/opt/jitc_genai/
+          cp README.md %{buildroot}/opt/jitc_genai/
+          cp INSTALL.md %{buildroot}/opt/jitc_genai/
 
           %files
           %defattr(-,root,root,-)
-          /opt/genai_research
+          /opt/jitc_genai
 
           %post
           # Run post-installation script
-          if [ -f /opt/genai_research/scripts/rpm-postinst.sh ]; then
-              bash /opt/genai_research/scripts/rpm-postinst.sh
+          if [ -f /opt/jitc_genai/scripts/rpm-postinst.sh ]; then
+              bash /opt/jitc_genai/scripts/rpm-postinst.sh
           fi
 
           %preun
           # Stop and disable service before uninstall
-          if systemctl is-active --quiet genai_research; then
-              systemctl stop genai_research
+          if systemctl is-active --quiet jitc_genai; then
+              systemctl stop jitc_genai
           fi
-          if systemctl is-enabled --quiet genai_research; then
-              systemctl disable genai_research
+          if systemctl is-enabled --quiet jitc_genai; then
+              systemctl disable jitc_genai
           fi
 
           %postun
           # Remove systemd service file on purge
           if [ $1 -eq 0 ]; then
-              rm -f /etc/systemd/system/genai_research.service
+              rm -f /etc/systemd/system/jitc_genai.service
               systemctl daemon-reload
           fi
 

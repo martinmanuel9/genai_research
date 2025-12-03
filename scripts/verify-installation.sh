@@ -19,7 +19,7 @@ print_warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 print_error() { echo -e "${RED}[✗]${NC} $1"; }
 print_header() { echo -e "${BLUE}=== $1 ===${NC}"; }
 
-INSTALL_DIR="${INSTALL_DIR:-/opt/genai_research}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/jitc_genai}"
 ISSUES_FOUND=0
 
 echo ""
@@ -155,21 +155,21 @@ fi
 
 # Check 6: System service
 print_header "Systemd Service"
-if systemctl list-unit-files | grep -q "genai_research.service"; then
+if systemctl list-unit-files | grep -q "jitc_genai.service"; then
     print_success "Systemd service installed"
 
-    if systemctl is-enabled --quiet genai_research 2>/dev/null; then
+    if systemctl is-enabled --quiet jitc_genai 2>/dev/null; then
         print_success "Service enabled (auto-start on boot)"
     else
         print_warning "Service not enabled for auto-start"
-        echo "  Run: sudo systemctl enable genai_research"
+        echo "  Run: sudo systemctl enable jitc_genai"
     fi
 
-    if systemctl is-active --quiet genai_research 2>/dev/null; then
+    if systemctl is-active --quiet jitc_genai 2>/dev/null; then
         print_success "Service running"
     else
         print_warning "Service not running"
-        echo "  Run: sudo systemctl start genai_research"
+        echo "  Run: sudo systemctl start jitc_genai"
     fi
 else
     print_error "Systemd service not installed"
@@ -178,7 +178,7 @@ fi
 
 # Check 7: Running containers (if service is active)
 print_header "Docker Containers"
-if systemctl is-active --quiet genai_research 2>/dev/null || docker ps --format "{{.Names}}" | grep -q "fastapi\|streamlit"; then
+if systemctl is-active --quiet jitc_genai 2>/dev/null || docker ps --format "{{.Names}}" | grep -q "fastapi\|streamlit"; then
     expected_containers=("fastapi" "streamlit" "postgres" "chromadb" "redis" "celery-worker")
     running_count=0
 
@@ -233,7 +233,7 @@ else
     echo "For help, see:"
     echo "  - Installation guide: $INSTALL_DIR/INSTALL.md"
     echo "  - README: $INSTALL_DIR/README.md"
-    echo "  - GitHub issues: https://github.com/martinmanuel9/genai_research/issues"
+    echo "  - GitHub issues: https://github.com/martinmanuel9/jitc_genai/issues"
 fi
 
 echo ""

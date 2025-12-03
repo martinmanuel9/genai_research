@@ -4,7 +4,7 @@ Get GenAI Research running in 10 minutes!
 
 ## Step 1: Download Installer
 
-Visit the [Releases page](https://github.com/martinmanuel9/genai_research/releases) and download the installer for your operating system:
+Visit the [Releases page](https://github.com/martinmanuel9/jitc_genai/releases) and download the installer for your operating system:
 
 | Operating System | File to Download |
 |-----------------|------------------|
@@ -76,7 +76,7 @@ sudo rpm -i genai-research-{version}.x86_64.rpm
 
 ### Linux
 ```bash
-sudo /opt/genai_research/scripts/setup-env.sh
+sudo /opt/jitc_genai/scripts/setup-env.sh
 ```
 Follow the interactive prompts to configure API keys and settings.
 
@@ -98,8 +98,8 @@ cd "/Applications/GenAI Research.app/Contents/Resources"
 
 ### Linux
 ```bash
-sudo systemctl start genai_research
-sudo systemctl enable genai_research  # Auto-start on boot
+sudo systemctl start jitc_genai
+sudo systemctl enable jitc_genai  # Auto-start on boot
 ```
 
 ### macOS
@@ -122,8 +122,8 @@ For on-premises AI models (no internet required):
 
 ### Linux
 ```bash
-sudo /opt/genai_research/scripts/install-ollama.sh
-/opt/genai_research/scripts/pull-ollama-models.sh auto
+sudo /opt/jitc_genai/scripts/install-ollama.sh
+/opt/jitc_genai/scripts/pull-ollama-models.sh auto
 ```
 
 ### macOS
@@ -165,7 +165,7 @@ cd "/Applications/GenAI Research.app/Contents/Resources"
 
 - **Full Documentation:** See [INSTALL.md](INSTALL.md)
 - **User Guide:** See [README.md](README.md)
-- **Issues:** https://github.com/martinmanuel9/genai_research/issues
+- **Issues:** https://github.com/martinmanuel9/jitc_genai/issues
 - **Email Support:** support@example.com
 
 ## Common Issues
@@ -203,7 +203,7 @@ To check from command line:
 
 **Linux:**
 ```bash
-cat /opt/genai_research/VERSION
+cat /opt/jitc_genai/VERSION
 ```
 
 **Windows:**

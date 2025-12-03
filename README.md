@@ -27,7 +27,7 @@ Download the latest release for your platform:
 - **Linux (RHEL/CentOS/Fedora)**: `genai-research-X.X.X.x86_64.rpm`
 - **macOS**: `genai-research-X.X.X.dmg`
 
-See [Releases](https://github.com/martinmanuel9/genai_research/releases)
+See [Releases](https://github.com/martinmanuel9/jitc_genai/releases)
 
 ### Prerequisites
 
@@ -76,14 +76,14 @@ $env:OLLAMA_HOST = "0.0.0.0:11434"; ollama serve
 ```bash
 # Pull recommended text models for chat/generation (~9 GB)
 # Linux
-/opt/genai_research/scripts/pull-ollama-models.sh recommended
+/opt/jitc_genai/scripts/pull-ollama-models.sh recommended
 # Windows
 & "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode recommended
 
 # Pull vision models for image understanding (~14.5 GB)
 # Includes: granite3.2-vision:2b, llava:7b, llava:13b
 # Linux
-/opt/genai_research/scripts/pull-ollama-models.sh vision
+/opt/jitc_genai/scripts/pull-ollama-models.sh vision
 # Windows
 & "C:\Program Files\GenAI Research\scripts\pull-ollama-models.ps1" -Mode vision
 ```
@@ -104,4 +104,4 @@ Proprietary - All rights reserved
 ## Support
 
 For issues and support:
-- [GitHub Issues](https://github.com/martinmanuel9/genai_research/issues)
+- [GitHub Issues](https://github.com/martinmanuel9/jitc_genai/issues)

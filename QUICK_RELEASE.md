@@ -16,7 +16,7 @@ git push origin main
 
 # 4. Done!
 # GitHub Actions automatically builds all installers.
-# Check: https://github.com/martinmanuel9/genai_research/actions
+# Check: https://github.com/martinmanuel9/jitc_genai/actions
 ```
 
 ---
@@ -33,7 +33,7 @@ git push origin main
    - Linux DEB (Debian/Ubuntu)
    - Linux RPM (RHEL/CentOS/Fedora)
    - macOS DMG
-4. Creates GitHub Release at: https://github.com/martinmanuel9/genai_research/releases
+4. Creates GitHub Release at: https://github.com/martinmanuel9/jitc_genai/releases
 5. Uploads all installers as downloadable assets
 6. Generates SHA256 checksums
 
@@ -145,7 +145,7 @@ git push origin main
 ## Monitoring the Build
 
 **GitHub Actions:**
-https://github.com/martinmanuel9/genai_research/actions
+https://github.com/martinmanuel9/jitc_genai/actions
 
 You'll see:
 - ✅ "Build Installers" workflow running
@@ -158,7 +158,7 @@ You'll see:
   - Generate Checksums
 
 **When Complete:**
-https://github.com/martinmanuel9/genai_research/releases
+https://github.com/martinmanuel9/jitc_genai/releases
 
 You'll see:
 - ✅ New release created (e.g., "Release v1.0.1")

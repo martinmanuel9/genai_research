@@ -21,7 +21,7 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 print_header() { echo -e "${CYAN}$1${NC}"; }
 
-INSTALL_DIR="${INSTALL_DIR:-/opt/genai_research}"
+INSTALL_DIR="${INSTALL_DIR:-/opt/jitc_genai}"
 ENV_FILE="$INSTALL_DIR/.env"
 ENV_TEMPLATE="$INSTALL_DIR/.env.template"
 
@@ -126,7 +126,7 @@ fi
 
 echo ""
 print_info "To start the application:"
-echo "  sudo systemctl start genai_research"
+echo "  sudo systemctl start jitc_genai"
 echo ""
 print_info "Or manually with Docker Compose:"
 echo "  cd $INSTALL_DIR && docker compose up -d"

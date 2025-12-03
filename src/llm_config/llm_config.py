@@ -27,125 +27,102 @@ class ModelConfig:
 
 MODEL_REGISTRY: Dict[str, ModelConfig] = {
     # --- OpenAI Models ---
-    "gpt-5.1": ModelConfig(
-        model_id="gpt-5.1",
-        display_name="GPT-5.1",
-        description="Next-generation GPT-5.1 model with advanced reasoning and creativity capabilities",
-        provider="openai",
-        max_context_tokens=256000,
-    ),
-    "gpt-5": ModelConfig(
-        model_id="gpt-5",
-        display_name="GPT-5",
-        description="State-of-the-art GPT-5 model for unparalleled performance in diverse tasks",
-        provider="openai",
-        max_context_tokens=256000,
-    ),
-    "gpt-5-mini": ModelConfig(
-        model_id="gpt-5-mini",
-        display_name="GPT-5 Mini",
-        description="Compact GPT-5 variant optimized for efficiency and cost-effectiveness",
-        provider="openai",
-        max_context_tokens=256000,
-    ),
-    "gpt-5-nano": ModelConfig(
-        model_id="gpt-5-nano",
-        display_name="GPT-5 Nano",
-        description="Ultra-lightweight GPT-5 model for rapid inference and minimal resource usage",
-        provider="openai",
-        max_context_tokens=256000,
-    ),
-    "gpt-4.1": ModelConfig(
-        model_id="gpt-4.1",
-        display_name="GPT-4.1",
-        description="Enhanced GPT-4 model with improved contextual understanding and generation quality",
-        provider="openai",
-        max_context_tokens=128000,
-    ),
-    "gpt-4": ModelConfig(
-        model_id="gpt-4",
-        display_name="GPT-4",
-        description="Most capable GPT-4 model for complex analysis and reasoning tasks",
-        provider="openai",
-        max_context_tokens=8192,
-    ),
-    "gpt-4o": ModelConfig(
-        model_id="gpt-4o",
-        display_name="GPT-4o",
-        description="Flagship multimodal OpenAI model with improved speed, cost, and vision support",
-        provider="openai",
-        max_context_tokens=128000,
-    ),
-    "gpt-4o-mini": ModelConfig(
-        model_id="gpt-4o-mini",
-        display_name="GPT-4o Mini",
-        description="Lightweight GPT-4o variant optimized for cost-effective, high-volume workloads",
-        provider="openai",
-        max_context_tokens=128000,
-    ),
-    "gpt-3.5-turbo": ModelConfig(
-        model_id="gpt-3.5-turbo",
-        display_name="GPT-3.5-Turbo",
-        description="Fast and cost-effective model for general tasks and conversations",
-        provider="openai",
-        max_context_tokens=16385,
-    ),
-    "gpt-4-turbo": ModelConfig(
-        model_id="gpt-4-turbo",
-        display_name="GPT-4-Turbo",
-        description="Faster and cheaper variant of GPT-4 for scalable applications",
-        provider="openai",
-        max_context_tokens=128000,
-    ),
-    # OpenAI Reasoning Models (o-series) - Do NOT support temperature parameter
-    "o1": ModelConfig(
-        model_id="o1",
-        display_name="OpenAI o1",
-        description="Advanced reasoning model optimized for complex problem-solving (no temperature control)",
-        provider="openai",
-        supports_temperature=False,  # o1 models don't support temperature
-        default_temperature=1.0,  # Fixed temperature
-        max_context_tokens=200000,
-    ),
-    "o1-mini": ModelConfig(
-        model_id="o1-mini",
-        display_name="OpenAI o1-mini",
-        description="Efficient reasoning model for faster inference (no temperature control)",
-        provider="openai",
-        supports_temperature=False,  # o1 models don't support temperature
-        default_temperature=1.0,  # Fixed temperature
-        max_context_tokens=128000,
-    ),
-    "o3-mini": ModelConfig(
-        model_id="o3-mini",
-        display_name="OpenAI o3-mini",
-        description="Latest reasoning model with improved capabilities (no temperature control)",
-        provider="openai",
-        supports_temperature=False,  # o3 models don't support temperature
-        default_temperature=1.0,  # Fixed temperature
-        max_context_tokens=200000,
-    ),
-
-    # --- Anthropic Models ---
-    # "claude-3-5-sonnet-20241022": ModelConfig(
-    #     model_id="claude-3-5-sonnet-20241022",
-    #     display_name="Claude 3.5 Sonnet",
-    #     description="Latest Claude 3.5 Sonnet with improved performance and capabilities",
-    #     provider="anthropic",
+    # "gpt-5.1": ModelConfig(
+    #     model_id="gpt-5.1",
+    #     display_name="GPT-5.1",
+    #     description="Next-generation GPT-5.1 model with advanced reasoning and creativity capabilities",
+    #     provider="openai",
+    #     max_context_tokens=256000,
+    # ),
+    # "gpt-5": ModelConfig(
+    #     model_id="gpt-5",
+    #     display_name="GPT-5",
+    #     description="State-of-the-art GPT-5 model for unparalleled performance in diverse tasks",
+    #     provider="openai",
+    #     max_context_tokens=256000,
+    # ),
+    # "gpt-5-mini": ModelConfig(
+    #     model_id="gpt-5-mini",
+    #     display_name="GPT-5 Mini",
+    #     description="Compact GPT-5 variant optimized for efficiency and cost-effectiveness",
+    #     provider="openai",
+    #     max_context_tokens=256000,
+    # ),
+    # "gpt-5-nano": ModelConfig(
+    #     model_id="gpt-5-nano",
+    #     display_name="GPT-5 Nano",
+    #     description="Ultra-lightweight GPT-5 model for rapid inference and minimal resource usage",
+    #     provider="openai",
+    #     max_context_tokens=256000,
+    # ),
+    # "gpt-4.1": ModelConfig(
+    #     model_id="gpt-4.1",
+    #     display_name="GPT-4.1",
+    #     description="Enhanced GPT-4 model with improved contextual understanding and generation quality",
+    #     provider="openai",
+    #     max_context_tokens=128000,
+    # ),
+    # "gpt-4": ModelConfig(
+    #     model_id="gpt-4",
+    #     display_name="GPT-4",
+    #     description="Most capable GPT-4 model for complex analysis and reasoning tasks",
+    #     provider="openai",
+    #     max_context_tokens=8192,
+    # ),
+    # "gpt-4o": ModelConfig(
+    #     model_id="gpt-4o",
+    #     display_name="GPT-4o",
+    #     description="Flagship multimodal OpenAI model with improved speed, cost, and vision support",
+    #     provider="openai",
+    #     max_context_tokens=128000,
+    # ),
+    # "gpt-4o-mini": ModelConfig(
+    #     model_id="gpt-4o-mini",
+    #     display_name="GPT-4o Mini",
+    #     description="Lightweight GPT-4o variant optimized for cost-effective, high-volume workloads",
+    #     provider="openai",
+    #     max_context_tokens=128000,
+    # ),
+    # "gpt-3.5-turbo": ModelConfig(
+    #     model_id="gpt-3.5-turbo",
+    #     display_name="GPT-3.5-Turbo",
+    #     description="Fast and cost-effective model for general tasks and conversations",
+    #     provider="openai",
+    #     max_context_tokens=16385,
+    # ),
+    # "gpt-4-turbo": ModelConfig(
+    #     model_id="gpt-4-turbo",
+    #     display_name="GPT-4-Turbo",
+    #     description="Faster and cheaper variant of GPT-4 for scalable applications",
+    #     provider="openai",
+    #     max_context_tokens=128000,
+    # ),
+    # # OpenAI Reasoning Models (o-series) - Do NOT support temperature parameter
+    # "o1": ModelConfig(
+    #     model_id="o1",
+    #     display_name="OpenAI o1",
+    #     description="Advanced reasoning model optimized for complex problem-solving (no temperature control)",
+    #     provider="openai",
+    #     supports_temperature=False,  # o1 models don't support temperature
+    #     default_temperature=1.0,  # Fixed temperature
     #     max_context_tokens=200000,
     # ),
-    # "claude-3-5-haiku-20241022": ModelConfig(
-    #     model_id="claude-3-5-haiku-20241022",
-    #     display_name="Claude 3.5 Haiku",
-    #     description="Latest Claude 3.5 Haiku with improved latency and translation capabilities",
-    #     provider="anthropic",
-    #     max_context_tokens=200000,
+    # "o1-mini": ModelConfig(
+    #     model_id="o1-mini",
+    #     display_name="OpenAI o1-mini",
+    #     description="Efficient reasoning model for faster inference (no temperature control)",
+    #     provider="openai",
+    #     supports_temperature=False,  # o1 models don't support temperature
+    #     default_temperature=1.0,  # Fixed temperature
+    #     max_context_tokens=128000,
     # ),
-    # "claude-3-opus-20240229": ModelConfig(
-    #     model_id="claude-3-opus-20240229",
-    #     display_name="Claude 3 Opus",
-    #     description="Anthropic's most capable Claude model for rigorous reasoning and complex drafting",
-    #     provider="anthropic",
+    # "o3-mini": ModelConfig(
+    #     model_id="o3-mini",
+    #     display_name="OpenAI o3-mini",
+    #     description="Latest reasoning model with improved capabilities (no temperature control)",
+    #     provider="openai",
+    #     supports_temperature=False,  # o3 models don't support temperature
+    #     default_temperature=1.0,  # Fixed temperature
     #     max_context_tokens=200000,
     # ),
 
@@ -176,29 +153,6 @@ MODEL_REGISTRY: Dict[str, ModelConfig] = {
         provider="ollama",
         max_context_tokens=128000,
     ),
-    # "llama3.1:70b": ModelConfig(
-    #     model_id="llama3.1:70b",
-    #     display_name="Llama 3.1 70B (Local)",
-    #     description="Meta's most capable model - Enterprise-grade performance (40GB disk, requires GPU)",
-    #     provider="ollama",
-    #     max_context_tokens=128000,
-    # ),
-
-    # Meta (US - California) - Llama 3 Series (Previous Generation)
-    # "llama3:8b": ModelConfig(
-    #     model_id="llama3:8b",
-    #     display_name="Llama 3 8B (Local)",
-    #     description="Meta's proven 8B model - Stable and reliable (4.7GB disk)",
-    #     provider="ollama",
-    #     max_context_tokens=8192,
-    # ),
-    # "llama3:70b": ModelConfig(
-    #     model_id="llama3:70b",
-    #     display_name="Llama 3 70B (Local)",
-    #     description="Meta's large-scale model - High performance for critical tasks (40GB disk)",
-    #     provider="ollama",
-    #     max_context_tokens=8192,
-    # ),
 
     # Microsoft (US - Washington) - Phi Series
     "phi3:mini": ModelConfig(

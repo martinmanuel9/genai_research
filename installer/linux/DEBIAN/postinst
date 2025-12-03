@@ -5,8 +5,8 @@
 
 set -e
 
-INSTALL_DIR="/opt/genai_research"
-DATA_DIR="/var/lib/genai_research"
+INSTALL_DIR="/opt/jitc_genai"
+DATA_DIR="/var/lib/jitc_genai"
 SERVICE_USER="genai"
 
 # Create service user if it doesn't exist
@@ -29,7 +29,7 @@ if getent group docker > /dev/null 2>&1; then
 fi
 
 # Create systemd service file
-cat > /etc/systemd/system/genai_research.service <<'EOF'
+cat > /etc/systemd/system/jitc_genai.service <<'EOF'
 [Unit]
 Description=GenAI Research
 Requires=docker.service
@@ -39,12 +39,12 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-WorkingDirectory=/opt/genai_research
+WorkingDirectory=/opt/jitc_genai
 User=root
 Group=root
 
 # Load environment
-EnvironmentFile=-/opt/genai_research/.env
+EnvironmentFile=-/opt/jitc_genai/.env
 
 # Build base image first, then start all services
 ExecStart=/bin/bash -c '/usr/bin/docker compose build base-poetry-deps && /usr/bin/docker compose up -d'
@@ -123,10 +123,10 @@ echo "  1. Verify installation (recommended):"
 echo "     $INSTALL_DIR/scripts/verify-installation.sh"
 echo ""
 echo "  2. Start the services:"
-echo "     sudo systemctl start genai_research"
+echo "     sudo systemctl start jitc_genai"
 echo ""
 echo "  3. Enable auto-start on boot (optional):"
-echo "     sudo systemctl enable genai_research"
+echo "     sudo systemctl enable jitc_genai"
 echo ""
 echo "  4. Access the web interface:"
 echo "     http://localhost:8501"

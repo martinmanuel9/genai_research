@@ -28,8 +28,8 @@
 
     <!-- Properties -->
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/martinmanuel9/genai_research" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/martinmanuel9/genai_research" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/martinmanuel9/jitc_genai" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/martinmanuel9/jitc_genai" />
 
     <!-- Add/Remove Programs Icon -->
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />

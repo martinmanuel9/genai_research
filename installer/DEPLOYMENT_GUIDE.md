@@ -374,7 +374,7 @@ cat chromadb_backup_20251114.tar.gz | docker compose exec -T chromadb tar xzf - 
 
 ### For End Users
 - Documentation: See INSTALL.md, README.md, QUICKSTART.md
-- Issues: https://github.com/martinmanuel9/genai_research/issues
+- Issues: https://github.com/martinmanuel9/jitc_genai/issues
 - Email: support@example.com
 
 ### For Developers
@@ -387,7 +387,7 @@ cat chromadb_backup_20251114.tar.gz | docker compose exec -T chromadb tar xzf - 
 ### File Structure
 
 ```
-genai_research/
+jitc_genai/
 ├── VERSION                    # Current version number
 ├── CHANGELOG.md              # Release notes
 ├── QUICKSTART.md             # Quick start for users

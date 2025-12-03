@@ -383,6 +383,9 @@ def render_pipeline_result(
             st.markdown("---")
             st.subheader("Section Details")
 
+            # Global counter for unique keys across all agent outputs
+            agent_output_counter = 0
+
             for idx, section in enumerate(section_results):
                 section_title = section.get("section_title", f"Section {idx + 1}")
 
@@ -393,13 +396,13 @@ def render_pipeline_result(
 
                     # Stage results
                     stage_results = section.get("stage_results", [])
-                    for stage in stage_results:
+                    for stage_idx, stage in enumerate(stage_results):
                         stage_name = stage.get("stage_name", "Unknown Stage")
                         st.markdown(f"**{stage_name.title()} Stage** ({stage.get('execution_mode', 'parallel')})")
 
                         # Agent results
                         agent_results = stage.get("agent_results", [])
-                        for agent in agent_results:
+                        for agent_idx, agent in enumerate(agent_results):
                             agent_name = agent.get("agent_name", "Unknown")
                             success = agent.get("success", True)
                             status_icon = "✅" if success else "❌"
@@ -412,9 +415,10 @@ def render_pipeline_result(
                                         f"Output from {agent_name}",
                                         value=output,
                                         height=150,
-                                        key=pref(f"agent_output_{idx}_{stage_name}_{agent.get('agent_id', 0)}"),
+                                        key=pref(f"agent_output_{agent_output_counter}"),
                                         disabled=True
                                     )
+                                    agent_output_counter += 1
                                 else:
                                     st.error(f"Error: {agent.get('error', 'Unknown error')}")
 
