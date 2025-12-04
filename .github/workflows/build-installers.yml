@@ -19,8 +19,8 @@ permissions:
   contents: write  # Required for creating releases and uploading assets
 
 env:
-  PRODUCT_NAME: "Verification GenAI"
-  PRODUCT_SHORT_NAME: "verification-genai"
+  PRODUCT_NAME: "JITC GenAI"
+  PRODUCT_SHORT_NAME: "jitc_genai"
 
 jobs:
   prepare:
