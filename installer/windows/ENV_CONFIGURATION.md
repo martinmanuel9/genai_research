@@ -121,4 +121,4 @@ To completely reconfigure:
 This installer includes the MIT License, which is displayed during installation.
 
 For more information, see the main repository:
-https://github.com/martinmanuel9/jitc_genai
+https://github.com/martinmanuel9/genai_research

@@ -2,8 +2,8 @@
 
 ## Quick Reference
 
-**Repository:** https://github.com/martinmanuel9/jitc_genai
-**Releases:** https://github.com/martinmanuel9/jitc_genai/releases
+**Repository:** https://github.com/martinmanuel9/genai_research
+**Releases:** https://github.com/martinmanuel9/genai_research/releases
 
 ## Two Ways to Create a Release
 
@@ -64,13 +64,13 @@ git push origin main
 
 ### Step 3: Monitor Build
 
-1. Go to https://github.com/martinmanuel9/jitc_genai/actions
+1. Go to https://github.com/martinmanuel9/genai_research/actions
 2. Watch the "Build Installers" workflow
 3. Wait for all jobs to complete (~10-15 minutes)
 
 ### Step 4: Verify Release
 
-1. Go to https://github.com/martinmanuel9/jitc_genai/releases
+1. Go to https://github.com/martinmanuel9/genai_research/releases
 2. Verify the new release is created with all assets:
    - ✅ `genai-research-1.0.1.msi` (Windows)
    - ✅ `genai-research_1.0.1_amd64.deb` (Debian/Ubuntu)
@@ -128,7 +128,7 @@ Same as Method 1 steps 3-5.
 
 Use GitHub Actions workflow dispatch:
 
-1. Go to https://github.com/martinmanuel9/jitc_genai/actions
+1. Go to https://github.com/martinmanuel9/genai_research/actions
 2. Select "Build Installers" workflow
 3. Click "Run workflow"
 4. Enter version (e.g., "1.0.1-beta")
@@ -158,13 +158,13 @@ ls -lh dist/
 Share this URL with customers:
 
 **Release Page:**
-https://github.com/martinmanuel9/jitc_genai/releases
+https://github.com/martinmanuel9/genai_research/releases
 
 **Quick Start Guide:**
-https://github.com/martinmanuel9/jitc_genai/blob/main/QUICKSTART.md
+https://github.com/martinmanuel9/genai_research/blob/main/QUICKSTART.md
 
 **Installation Guide:**
-https://github.com/martinmanuel9/jitc_genai/blob/main/INSTALL.md
+https://github.com/martinmanuel9/genai_research/blob/main/INSTALL.md
 
 ## Version Numbering Guidelines
 
@@ -233,14 +233,14 @@ Subject: GenAI Research v1.0.1 Released
 
 We're pleased to announce the release of GenAI Research v1.0.1!
 
-Download: https://github.com/martinmanuel9/jitc_genai/releases
+Download: https://github.com/martinmanuel9/genai_research/releases
 
 What's New:
 - [List key features/fixes from CHANGELOG.md]
 
 Installation:
 See our Quick Start Guide for installation instructions:
-https://github.com/martinmanuel9/jitc_genai/blob/main/QUICKSTART.md
+https://github.com/martinmanuel9/genai_research/blob/main/QUICKSTART.md
 
 Upgrade Instructions:
 If you're upgrading from a previous version:
@@ -352,5 +352,5 @@ git branch -d hotfix/1.0.1
 ## Support
 
 For questions about the release process:
-- Open an issue: https://github.com/martinmanuel9/jitc_genai/issues
+- Open an issue: https://github.com/martinmanuel9/genai_research/issues
 - Email: support@example.com

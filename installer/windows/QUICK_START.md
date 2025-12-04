@@ -160,8 +160,8 @@ docker compose down
 - README: `README.md` in installation directory
 
 ### Support
-- GitHub Issues: https://github.com/martinmanuel9/jitc_genai/issues
-- Repository: https://github.com/martinmanuel9/jitc_genai
+- GitHub Issues: https://github.com/martinmanuel9/genai_research/issues
+- Repository: https://github.com/martinmanuel9/genai_research
 
 ## Upgrading
 
@@ -215,4 +215,4 @@ After installation and first start:
 
 **Welcome to GenAI Research!**
 
-For more information, visit: https://github.com/martinmanuel9/jitc_genai
+For more information, visit: https://github.com/martinmanuel9/genai_research

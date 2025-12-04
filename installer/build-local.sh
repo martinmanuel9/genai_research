@@ -77,7 +77,7 @@ build_linux_deb() {
     mkdir -p "$BUILD_DIR"
 
     # Create package structure
-    mkdir -p "$BUILD_DIR/$PKG_DIR/opt/jitc_genai"
+    mkdir -p "$BUILD_DIR/$PKG_DIR/opt/genai_research"
     mkdir -p "$BUILD_DIR/$PKG_DIR/DEBIAN"
 
     # Copy application files
@@ -100,25 +100,25 @@ build_linux_deb() {
     done
 
     # Copy with verification
-    cp -r "$PROJECT_ROOT/src" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy src"; exit 1; }
-    cp -r "$PROJECT_ROOT/scripts" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy scripts"; exit 1; }
-    cp "$PROJECT_ROOT/docker-compose.yml" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy docker-compose.yml"; exit 1; }
-    cp "$PROJECT_ROOT/Dockerfile.base" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy Dockerfile.base"; exit 1; }
-    cp "$PROJECT_ROOT/pyproject.toml" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy pyproject.toml"; exit 1; }
-    cp "$PROJECT_ROOT/poetry.lock" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy poetry.lock"; exit 1; }
-    cp "$PROJECT_ROOT/run" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy run"; exit 1; }
-    chmod +x "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/run"
-    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/.env.template" || { print_error "Failed to copy .env.template"; exit 1; }
-    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/.env" || { print_error "Failed to copy .env"; exit 1; }
-    cp "$PROJECT_ROOT/VERSION" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy VERSION"; exit 1; }
-    cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy CHANGELOG.md"; exit 1; }
-    cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy README.md"; exit 1; }
-    cp "$PROJECT_ROOT/INSTALL.md" "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/" || { print_error "Failed to copy INSTALL.md"; exit 1; }
+    cp -r "$PROJECT_ROOT/src" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy src"; exit 1; }
+    cp -r "$PROJECT_ROOT/scripts" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy scripts"; exit 1; }
+    cp "$PROJECT_ROOT/docker-compose.yml" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy docker-compose.yml"; exit 1; }
+    cp "$PROJECT_ROOT/Dockerfile.base" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy Dockerfile.base"; exit 1; }
+    cp "$PROJECT_ROOT/pyproject.toml" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy pyproject.toml"; exit 1; }
+    cp "$PROJECT_ROOT/poetry.lock" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy poetry.lock"; exit 1; }
+    cp "$PROJECT_ROOT/run" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy run"; exit 1; }
+    chmod +x "$BUILD_DIR/$PKG_DIR/opt/genai_research/run"
+    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env.template" || { print_error "Failed to copy .env.template"; exit 1; }
+    cp "$PROJECT_ROOT/.env.template" "$BUILD_DIR/$PKG_DIR/opt/genai_research/.env" || { print_error "Failed to copy .env"; exit 1; }
+    cp "$PROJECT_ROOT/VERSION" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy VERSION"; exit 1; }
+    cp "$PROJECT_ROOT/CHANGELOG.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy CHANGELOG.md"; exit 1; }
+    cp "$PROJECT_ROOT/README.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy README.md"; exit 1; }
+    cp "$PROJECT_ROOT/INSTALL.md" "$BUILD_DIR/$PKG_DIR/opt/genai_research/" || { print_error "Failed to copy INSTALL.md"; exit 1; }
 
     # Verify all files were copied
     print_info "Verifying copied files..."
     for file in src scripts docker-compose.yml Dockerfile.base pyproject.toml poetry.lock run .env.template .env VERSION CHANGELOG.md README.md INSTALL.md; do
-        if [ ! -e "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/$file" ]; then
+        if [ ! -e "$BUILD_DIR/$PKG_DIR/opt/genai_research/$file" ]; then
             print_error "Verification failed: $file was not copied"
             exit 1
         fi
@@ -136,7 +136,7 @@ build_linux_deb() {
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/postinst"
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/prerm"
     chmod 755 "$BUILD_DIR/$PKG_DIR/DEBIAN/postrm"
-    chmod +x "$BUILD_DIR/$PKG_DIR/opt/jitc_genai/scripts/"*.sh
+    chmod +x "$BUILD_DIR/$PKG_DIR/opt/genai_research/scripts/"*.sh
 
     # Build DEB package
     print_info "Building DEB package..."
@@ -171,7 +171,7 @@ Version:        $VERSION
 Release:        1%{?dist}
 Summary:        AI-powered research and verification system
 License:        Proprietary
-URL:            https://github.com/martinmanuel9/jitc_genai
+URL:            https://github.com/martinmanuel9/genai_research
 Requires:       docker >= 24.0.0
 BuildArch:      $TARGET_ARCH
 
@@ -192,39 +192,39 @@ verification capabilities using advanced AI models. Features include:
 # No build needed - Python/Docker application
 
 %install
-mkdir -p %{buildroot}/opt/jitc_genai
-cp -r $PROJECT_ROOT/src %{buildroot}/opt/jitc_genai/
-cp -r $PROJECT_ROOT/scripts %{buildroot}/opt/jitc_genai/
-cp $PROJECT_ROOT/docker-compose.yml %{buildroot}/opt/jitc_genai/
-cp $PROJECT_ROOT/.env.template %{buildroot}/opt/jitc_genai/.env
-cp $PROJECT_ROOT/VERSION %{buildroot}/opt/jitc_genai/
-cp $PROJECT_ROOT/CHANGELOG.md %{buildroot}/opt/jitc_genai/
-cp $PROJECT_ROOT/README.md %{buildroot}/opt/jitc_genai/
-cp $PROJECT_ROOT/INSTALL.md %{buildroot}/opt/jitc_genai/
+mkdir -p %{buildroot}/opt/genai_research
+cp -r $PROJECT_ROOT/src %{buildroot}/opt/genai_research/
+cp -r $PROJECT_ROOT/scripts %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/docker-compose.yml %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/.env.template %{buildroot}/opt/genai_research/.env
+cp $PROJECT_ROOT/VERSION %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/CHANGELOG.md %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/README.md %{buildroot}/opt/genai_research/
+cp $PROJECT_ROOT/INSTALL.md %{buildroot}/opt/genai_research/
 
 %files
 %defattr(-,root,root,-)
-/opt/jitc_genai
+/opt/genai_research
 
 %post
 # Run post-installation script
-if [ -f /opt/jitc_genai/scripts/rpm-postinst.sh ]; then
-    bash /opt/jitc_genai/scripts/rpm-postinst.sh
+if [ -f /opt/genai_research/scripts/rpm-postinst.sh ]; then
+    bash /opt/genai_research/scripts/rpm-postinst.sh
 fi
 
 %preun
 # Stop and disable service before uninstall
-if systemctl is-active --quiet jitc_genai; then
-    systemctl stop jitc_genai
+if systemctl is-active --quiet genai_research; then
+    systemctl stop genai_research
 fi
-if systemctl is-enabled --quiet jitc_genai; then
-    systemctl disable jitc_genai
+if systemctl is-enabled --quiet genai_research; then
+    systemctl disable genai_research
 fi
 
 %postun
 # Remove systemd service file on purge
 if [ \$1 -eq 0 ]; then
-    rm -f /etc/systemd/system/jitc_genai.service
+    rm -f /etc/systemd/system/genai_research.service
     systemctl daemon-reload
 fi
 

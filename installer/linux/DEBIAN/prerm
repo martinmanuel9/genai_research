@@ -6,12 +6,12 @@
 set -e
 
 # Stop and disable service
-if systemctl is-active --quiet jitc_genai; then
-    systemctl stop jitc_genai
+if systemctl is-active --quiet genai_research; then
+    systemctl stop genai_research
 fi
 
-if systemctl is-enabled --quiet jitc_genai; then
-    systemctl disable jitc_genai
+if systemctl is-enabled --quiet genai_research; then
+    systemctl disable genai_research
 fi
 
 exit 0

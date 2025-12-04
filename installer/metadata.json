@@ -4,7 +4,7 @@
     "short_name": "genai-research",
     "company": "Your Organization",
     "description": "AI-powered research and verification system with on-premises LLM support",
-    "website": "https://github.com/martinmanuel9/jitc_genai",
+    "website": "https://github.com/martinmanuel9/genai_research",
     "license": "Proprietary",
     "support_email": "support@example.com"
   },
@@ -66,12 +66,12 @@
   },
   "install_paths": {
     "windows": "C:\\Program Files\\GenAI Research",
-    "linux": "/opt/jitc_genai",
+    "linux": "/opt/genai_research",
     "macos": "/Applications/GenAI Research.app/Contents"
   },
   "data_paths": {
     "windows": "%PROGRAMDATA%\\GenAI Research",
-    "linux": "/var/lib/jitc_genai",
+    "linux": "/var/lib/genai_research",
     "macos": "~/Library/Application Support/GenAI Research"
   }
 }

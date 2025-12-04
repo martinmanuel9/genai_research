@@ -36,7 +36,7 @@
 
 ### 1. Download Installer
 
-Download the appropriate installer for your operating system from the [Releases](https://github.com/martinmanuel9/jitc_genai/releases) page:
+Download the appropriate installer for your operating system from the [Releases](https://github.com/martinmanuel9/genai_research/releases) page:
 
 - **Windows:** `genai-research-{version}.msi`
 - **Ubuntu/Debian:** `genai-research_{version}_amd64.deb`
@@ -47,7 +47,7 @@ Download the appropriate installer for your operating system from the [Releases]
 
 ```bash
 # Download checksums file
-wget https://github.com/martinmanuel9/jitc_genai/releases/download/v{version}/checksums-sha256.txt
+wget https://github.com/martinmanuel9/genai_research/releases/download/v{version}/checksums-sha256.txt
 
 # Verify checksum
 sha256sum -c checksums-sha256.txt --ignore-missing
@@ -169,18 +169,18 @@ schtasks /create /tn "GenAI Research" /tr "docker compose -f 'C:\Program Files\G
 
 3. **Configure Environment**
    ```bash
-   sudo /opt/jitc_genai/scripts/setup-env.sh
+   sudo /opt/genai_research/scripts/setup-env.sh
    ```
 
 4. **Start Services**
    ```bash
-   sudo systemctl start jitc_genai
-   sudo systemctl status jitc_genai
+   sudo systemctl start genai_research
+   sudo systemctl status genai_research
    ```
 
 5. **Enable Auto-Start (Optional)**
    ```bash
-   sudo systemctl enable jitc_genai
+   sudo systemctl enable genai_research
    ```
 
 6. **Access Web Interface**
@@ -339,7 +339,7 @@ Start-Process powershell -ArgumentList "-Command", "`$env:OLLAMA_HOST='0.0.0.0:1
 **Pull recommended text models for chat/generation (~9 GB):**
 ```bash
 # Linux
-/opt/jitc_genai/scripts/pull-ollama-models.sh recommended
+/opt/genai_research/scripts/pull-ollama-models.sh recommended
 
 # macOS
 /Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh recommended
@@ -354,7 +354,7 @@ Includes: `granite3.2-vision:2b`, `llava:7b`, `llava:13b`
 
 ```bash
 # Linux
-/opt/jitc_genai/scripts/pull-ollama-models.sh vision
+/opt/genai_research/scripts/pull-ollama-models.sh vision
 
 # macOS
 /Applications/GenAI\ Research.app/Contents/Resources/scripts/pull-ollama-models.sh vision
@@ -438,7 +438,7 @@ You should see 6 services running:
 
 **Linux:**
 ```bash
-cat /opt/jitc_genai/VERSION
+cat /opt/genai_research/VERSION
 ```
 
 **Windows:**
@@ -456,7 +456,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 1. **Stop Current Services**
    ```bash
    # Linux
-   sudo systemctl stop jitc_genai
+   sudo systemctl stop genai_research
 
    # Windows/macOS
    docker compose down
@@ -465,7 +465,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 2. **Backup Data (Recommended)**
    ```bash
    # Linux
-   sudo cp -r /var/lib/jitc_genai /var/lib/jitc_genai.backup
+   sudo cp -r /var/lib/genai_research /var/lib/genai_research.backup
 
    # Windows
    docker compose exec postgres pg_dump -U g3nA1-user rag_memory > backup.sql
@@ -482,7 +482,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 4. **Restart Services**
    ```bash
    # Linux
-   sudo systemctl start jitc_genai
+   sudo systemctl start genai_research
 
    # Windows/macOS
    docker compose up -d
@@ -515,8 +515,8 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
 
 1. **Stop Services**
    ```bash
-   sudo systemctl stop jitc_genai
-   sudo systemctl disable jitc_genai
+   sudo systemctl stop genai_research
+   sudo systemctl disable genai_research
    ```
 
 2. **Uninstall Package**
@@ -529,7 +529,7 @@ cat "/Applications/GenAI Research.app/Contents/Resources/VERSION"
    ```
 
 3. **Remove Data (If Prompted)**
-   The uninstaller will ask if you want to remove data at `/var/lib/jitc_genai`
+   The uninstaller will ask if you want to remove data at `/var/lib/genai_research`
 
 ### macOS
 
@@ -650,8 +650,8 @@ docker system prune -a --volumes
 
 ### Get Help
 
-- **Documentation:** https://github.com/martinmanuel9/jitc_genai
-- **Issues:** https://github.com/martinmanuel9/jitc_genai/issues
+- **Documentation:** https://github.com/martinmanuel9/genai_research
+- **Issues:** https://github.com/martinmanuel9/genai_research/issues
 - **Email:** support@example.com
 
 ---

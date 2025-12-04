@@ -6,7 +6,7 @@ Architecture: amd64
 Depends: docker-ce (>= 24.0.0) | docker.io (>= 24.0.0), docker-compose-plugin (>= 2.20.0)
 Recommends: nvidia-docker2, curl
 Maintainer: Your Organization <support@example.com>
-Homepage: https://github.com/martinmanuel9/jitc_genai
+Homepage: https://github.com/martinmanuel9/genai_research
 Description: AI-powered research and verification system
  GenAI Research provides comprehensive AI-powered research and
  verification capabilities using advanced AI models. Features include:
